@@ -80,11 +80,10 @@ struct GeneralSettingsView: View {
                     Text(L.Settings.breakInterval)
                     Spacer()
                     Picker("", selection: $viewModel.breakIntervalMinutes) {
-                        Text(L.Settings.minutes(30)).tag(30)
-                        Text(L.Settings.minutes(45)).tag(45)
-                        Text(L.Settings.minutes(60)).tag(60)
-                        Text(L.Settings.minutes(90)).tag(90)
-                        Text(L.Settings.minutes(120)).tag(120)
+                        ForEach(Array(stride(from: 20, through: 120, by: 5)), id: \.self) {
+                            minutes in
+                            Text(L.Settings.minutes(minutes)).tag(minutes)
+                        }
                     }
                     .pickerStyle(.menu)
                     .frame(width: 100)
