@@ -71,7 +71,7 @@ class ConfirmWindowController {
         contentView.layer?.masksToBounds = true
 
         // Title label
-        let titleLabel = NSTextField(labelWithString: "휴식 시간입니다! 🧘")
+        let titleLabel = NSTextField(labelWithString: L.ConfirmWindow.title)
         titleLabel.font = NSFont.systemFont(ofSize: 24, weight: .semibold)
         titleLabel.textColor = .white
         titleLabel.alignment = .center
@@ -79,7 +79,7 @@ class ConfirmWindowController {
         contentView.addSubview(titleLabel)
 
         // Subtitle label
-        let subtitleLabel = NSTextField(labelWithString: "잠시 쉬거나 자세를 바꿔보세요")
+        let subtitleLabel = NSTextField(labelWithString: L.ConfirmWindow.subtitle)
         subtitleLabel.font = NSFont.systemFont(ofSize: 14, weight: .regular)
         subtitleLabel.textColor = .white.withAlphaComponent(0.8)
         subtitleLabel.alignment = .center
@@ -87,7 +87,8 @@ class ConfirmWindowController {
         contentView.addSubview(subtitleLabel)
 
         // Countdown label
-        let countdown = NSTextField(labelWithString: "5:00 후 자동 해제")
+        let countdown = NSTextField(
+            labelWithString: L.ConfirmWindow.autoDismissIn(minutes: 5, seconds: 0))
         countdown.font = NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .regular)
         countdown.textColor = .white.withAlphaComponent(0.6)
         countdown.alignment = .center
@@ -96,7 +97,8 @@ class ConfirmWindowController {
         self.countdownLabel = countdown
 
         // Confirm button
-        let button = NSButton(title: "휴식 완료", target: self, action: #selector(confirmButtonClicked))
+        let button = NSButton(
+            title: L.ConfirmWindow.endBreak, target: self, action: #selector(confirmButtonClicked))
         button.bezelStyle = .rounded
         button.font = NSFont.systemFont(ofSize: 16, weight: .medium)
         button.frame = NSRect(x: (windowWidth - 150) / 2, y: 25, width: 150, height: 40)
@@ -164,7 +166,8 @@ class ConfirmWindowController {
         let minutes = Int(remaining) / 60
         let seconds = Int(remaining) % 60
 
-        countdownLabel?.stringValue = String(format: "%d:%02d 후 자동 해제", minutes, seconds)
+        countdownLabel?.stringValue = L.ConfirmWindow.autoDismissIn(
+            minutes: minutes, seconds: seconds)
     }
 
     private func autoRestore() {

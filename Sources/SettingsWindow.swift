@@ -22,7 +22,7 @@ class SettingsWindowController {
         let hostingController = NSHostingController(rootView: settingsView)
 
         let window = NSWindow(contentViewController: hostingController)
-        window.title = "Teumnirm 설정"
+        window.title = L.Settings.windowTitle
         window.styleMask = [.titled, .closable]
         window.setContentSize(NSSize(width: 450, height: 500))
         window.center()
@@ -55,7 +55,7 @@ struct SettingsView: View {
         TabView {
             GeneralSettingsView(viewModel: viewModel)
                 .tabItem {
-                    Label("일반", systemImage: "gearshape")
+                    Label(L.Settings.tabGeneral, systemImage: "gearshape")
                 }
 
             HueSettingsView(viewModel: viewModel)
@@ -77,44 +77,44 @@ struct GeneralSettingsView: View {
         Form {
             Section {
                 HStack {
-                    Text("휴식 알림 간격")
+                    Text(L.Settings.breakInterval)
                     Spacer()
                     Picker("", selection: $viewModel.breakIntervalMinutes) {
-                        Text("30분").tag(30)
-                        Text("45분").tag(45)
-                        Text("60분").tag(60)
-                        Text("90분").tag(90)
-                        Text("120분").tag(120)
+                        Text(L.Settings.minutes(30)).tag(30)
+                        Text(L.Settings.minutes(45)).tag(45)
+                        Text(L.Settings.minutes(60)).tag(60)
+                        Text(L.Settings.minutes(90)).tag(90)
+                        Text(L.Settings.minutes(120)).tag(120)
                     }
                     .pickerStyle(.menu)
                     .frame(width: 100)
                 }
 
                 HStack {
-                    Text("자동 해제 시간")
+                    Text(L.Settings.autoRestoreTime)
                     Spacer()
                     Picker("", selection: $viewModel.autoRestoreMinutes) {
-                        Text("3분").tag(3)
-                        Text("5분").tag(5)
-                        Text("10분").tag(10)
-                        Text("15분").tag(15)
+                        Text(L.Settings.minutes(3)).tag(3)
+                        Text(L.Settings.minutes(5)).tag(5)
+                        Text(L.Settings.minutes(10)).tag(10)
+                        Text(L.Settings.minutes(15)).tag(15)
                     }
                     .pickerStyle(.menu)
                     .frame(width: 100)
                 }
             } header: {
-                Text("타이머 설정")
+                Text(L.Settings.timerSettings)
             }
 
             Section {
-                Toggle("호환 모드 사용 (블러가 안 보이면 활성화)", isOn: $viewModel.useCompatibilityMode)
+                Toggle(L.Settings.useCompatibilityMode, isOn: $viewModel.useCompatibilityMode)
             } header: {
-                Text("화면 블러")
+                Text(L.Settings.screenBlur)
             }
 
             Section {
                 HStack {
-                    Text("현재 상태")
+                    Text(L.Settings.currentStatus)
                     Spacer()
                     Text(viewModel.statusText)
                         .foregroundColor(.secondary)
@@ -122,7 +122,7 @@ struct GeneralSettingsView: View {
 
                 if viewModel.remainingTimeText != nil {
                     HStack {
-                        Text("다음 휴식까지")
+                        Text(L.Settings.nextBreakIn)
                         Spacer()
                         Text(viewModel.remainingTimeText ?? "")
                             .foregroundColor(.secondary)
@@ -130,7 +130,7 @@ struct GeneralSettingsView: View {
                     }
                 }
             } header: {
-                Text("상태")
+                Text(L.Settings.status)
             }
         }
         .formStyle(.grouped)
@@ -149,16 +149,16 @@ struct HueSettingsView: View {
     var body: some View {
         Form {
             Section {
-                Toggle("Philips Hue 연동 사용", isOn: $viewModel.hueEnabled)
+                Toggle(L.Hue.enableIntegration, isOn: $viewModel.hueEnabled)
             }
 
             if viewModel.hueEnabled {
                 Section {
                     HStack {
-                        TextField("브릿지 IP 주소", text: $viewModel.hueBridgeIP)
+                        TextField(L.Hue.bridgeIP, text: $viewModel.hueBridgeIP)
                             .textFieldStyle(.roundedBorder)
 
-                        Button("자동 검색") {
+                        Button(L.Hue.autoDiscover) {
                             discoverBridge()
                         }
                         .disabled(isDiscovering)
@@ -168,17 +168,17 @@ struct HueSettingsView: View {
                         HStack {
                             ProgressView()
                                 .scaleEffect(0.7)
-                            Text("브릿지 검색 중...")
+                            Text(L.Hue.searchingBridge)
                                 .foregroundColor(.secondary)
                         }
                     }
                 } header: {
-                    Text("브릿지 연결")
+                    Text(L.Hue.bridgeConnection)
                 }
 
                 Section {
                     if viewModel.hueUsername.isEmpty {
-                        Button("브릿지 연결하기") {
+                        Button(L.Hue.connectToBridge) {
                             showLinkButtonAlert = true
                         }
                         .disabled(viewModel.hueBridgeIP.isEmpty || isRegistering)
@@ -187,7 +187,7 @@ struct HueSettingsView: View {
                             HStack {
                                 ProgressView()
                                     .scaleEffect(0.7)
-                                Text("연결 중...")
+                                Text(L.Hue.connecting)
                                     .foregroundColor(.secondary)
                             }
                         }
@@ -195,9 +195,9 @@ struct HueSettingsView: View {
                         HStack {
                             Image(systemName: "checkmark.circle.fill")
                                 .foregroundColor(.green)
-                            Text("연결됨")
+                            Text(L.Hue.connected)
                             Spacer()
-                            Button("연결 해제") {
+                            Button(L.Hue.disconnect) {
                                 viewModel.hueUsername = ""
                                 viewModel.selectedLightIDs.removeAll()
                             }
@@ -205,13 +205,13 @@ struct HueSettingsView: View {
                         }
                     }
                 } header: {
-                    Text("인증")
+                    Text(L.Hue.authentication)
                 }
 
                 if !viewModel.hueUsername.isEmpty {
                     Section {
                         if viewModel.availableLights.isEmpty {
-                            Button("조명 목록 불러오기") {
+                            Button(L.Hue.loadLights) {
                                 loadLights()
                             }
                         } else {
@@ -233,7 +233,7 @@ struct HueSettingsView: View {
                             }
                         }
                     } header: {
-                        Text("제어할 조명")
+                        Text(L.Hue.lightsToControl)
                     }
                 }
 
@@ -246,13 +246,13 @@ struct HueSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .alert("브릿지 버튼을 눌러주세요", isPresented: $showLinkButtonAlert) {
-            Button("취소", role: .cancel) {}
-            Button("연결") {
+        .alert(L.Hue.pressBridgeButton, isPresented: $showLinkButtonAlert) {
+            Button(L.Hue.cancel, role: .cancel) {}
+            Button(L.Hue.connect) {
                 registerUser()
             }
         } message: {
-            Text("Philips Hue 브릿지의 큰 버튼을 누른 후 '연결'을 클릭하세요.")
+            Text(L.Hue.pressBridgeButtonMessage)
         }
     }
 
@@ -269,7 +269,7 @@ struct HueSettingsView: View {
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = "브릿지를 찾을 수 없습니다: \(error.localizedDescription)"
+                    errorMessage = L.Hue.couldNotFindBridge(error.localizedDescription)
                     isDiscovering = false
                 }
             }
@@ -293,12 +293,12 @@ struct HueSettingsView: View {
                 }
             } catch HueError.linkButtonNotPressed {
                 await MainActor.run {
-                    errorMessage = "브릿지 버튼을 먼저 눌러주세요"
+                    errorMessage = L.Hue.pressButtonFirst
                     isRegistering = false
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = "연결 실패: \(error.localizedDescription)"
+                    errorMessage = L.Hue.connectionFailed(error.localizedDescription)
                     isRegistering = false
                 }
             }
@@ -319,7 +319,7 @@ struct HueSettingsView: View {
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = "조명 목록을 불러올 수 없습니다: \(error.localizedDescription)"
+                    errorMessage = L.Hue.couldNotLoadLights(error.localizedDescription)
                 }
             }
         }
@@ -383,14 +383,14 @@ class SettingsViewModel: ObservableObject {
     @Published var availableLights: [String: HueLight] = [:]
 
     var statusText: String {
-        guard let appDelegate = appDelegate else { return "알 수 없음" }
+        guard let appDelegate = appDelegate else { return L.Settings.statusUnknown }
         switch appDelegate.state {
         case .monitoring:
-            return "모니터링 중"
+            return L.Settings.statusMonitoring
         case .breakTime:
-            return "휴식 시간"
+            return L.Settings.statusBreakTime
         case .paused:
-            return "일시정지"
+            return L.Settings.statusPaused
         }
     }
 

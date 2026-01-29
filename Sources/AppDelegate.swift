@@ -96,7 +96,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = NSMenu()
 
         // Status
-        statusMenuItem = NSMenuItem(title: "상태: 시작 중...", action: nil, keyEquivalent: "")
+        statusMenuItem = NSMenuItem(title: L.Menu.statusStarting, action: nil, keyEquivalent: "")
         statusMenuItem.isEnabled = false
         menu.addItem(statusMenuItem)
 
@@ -109,14 +109,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Enabled toggle
         enabledMenuItem = NSMenuItem(
-            title: "모니터링", action: #selector(toggleEnabled), keyEquivalent: "e")
+            title: L.Menu.monitoring, action: #selector(toggleEnabled), keyEquivalent: "e")
         enabledMenuItem.target = self
         enabledMenuItem.state = .on
         menu.addItem(enabledMenuItem)
 
         // Reset timer
         let resetItem = NSMenuItem(
-            title: "타이머 초기화", action: #selector(resetTimer), keyEquivalent: "r")
+            title: L.Menu.resetTimer, action: #selector(resetTimer), keyEquivalent: "r")
         resetItem.target = self
         menu.addItem(resetItem)
 
@@ -124,7 +124,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Confirm break (only visible during break time)
         confirmMenuItem = NSMenuItem(
-            title: "휴식 완료", action: #selector(confirmBreak), keyEquivalent: "\r")
+            title: L.Menu.endBreak, action: #selector(confirmBreak), keyEquivalent: "\r")
         confirmMenuItem.target = self
         confirmMenuItem.isHidden = true
         menu.addItem(confirmMenuItem)
@@ -133,14 +133,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Settings
         let settingsItem = NSMenuItem(
-            title: "설정...", action: #selector(openSettings), keyEquivalent: ",")
+            title: L.Menu.settings, action: #selector(openSettings), keyEquivalent: ",")
         settingsItem.target = self
         menu.addItem(settingsItem)
 
         menu.addItem(NSMenuItem.separator())
 
         // Quit
-        let quitItem = NSMenuItem(title: "종료", action: #selector(quit), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: L.Menu.quit, action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
 
@@ -301,7 +301,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let minutes = Int(remaining) / 60
         let seconds = Int(remaining) % 60
 
-        timerMenuItem.title = String(format: "다음 휴식까지: %d:%02d", minutes, seconds)
+        timerMenuItem.title = L.Menu.nextBreakIn(minutes: minutes, seconds: seconds)
     }
 
     // MARK: - Activity Handling
@@ -328,14 +328,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func updateUI() {
         switch state {
         case .monitoring:
-            statusMenuItem.title = "상태: 모니터링 중"
+            statusMenuItem.title = L.Menu.statusMonitoring
             statusItem.button?.image = NSImage(
                 systemSymbolName: "timer", accessibilityDescription: "Monitoring")
             enabledMenuItem.state = .on
             confirmMenuItem.isHidden = true
 
         case .breakTime:
-            statusMenuItem.title = "상태: 휴식 시간"
+            statusMenuItem.title = L.Menu.statusBreakTime
             statusItem.button?.image = NSImage(
                 systemSymbolName: "pause.circle.fill", accessibilityDescription: "Break Time")
             enabledMenuItem.state = .on
@@ -343,7 +343,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             timerMenuItem.title = ""
 
         case .paused:
-            statusMenuItem.title = "상태: 일시정지"
+            statusMenuItem.title = L.Menu.statusPaused
             statusItem.button?.image = NSImage(
                 systemSymbolName: "pause.circle", accessibilityDescription: "Paused")
             enabledMenuItem.state = .off
