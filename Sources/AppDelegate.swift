@@ -264,9 +264,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func startUsageTimer() {
         usageTimer?.invalidate()
-        usageTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+        let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.checkUsageTime()
         }
+        // .common 모드에 추가하여 메뉴가 열려 있을 때도 타이머가 동작하도록 함
+        RunLoop.main.add(timer, forMode: .common)
+        usageTimer = timer
     }
 
     private func startTimerUpdateTimer() {
