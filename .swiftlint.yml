@@ -10,6 +10,14 @@ disabled_rules:
   - type_body_length
   - file_length
   - function_body_length
+  # Disabled to avoid conflicts with Swift formatter
+  - closure_parameter_position
+  - opening_brace
+
+type_name:
+  allowed_symbols: []
+  min_length: 1 # Allow short type names like 'L'
+  max_length: 40
 
 opt_in_rules:
   - empty_count

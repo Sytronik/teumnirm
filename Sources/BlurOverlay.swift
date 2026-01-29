@@ -129,8 +129,7 @@ class BlurOverlayManager {
         guard animationTimer == nil else { return }
 
         animationTimer = Timer.scheduledTimer(withTimeInterval: 0.033, repeats: true) {
-            [weak self] _ in
-            self?.updateBlur()
+            [weak self] _ in self?.updateBlur()
         }
     }
 
@@ -196,7 +195,7 @@ class BlurOverlayManager {
     // MARK: - Display Change Handling
 
     func registerDisplayChangeCallback() {
-        let callback: CGDisplayReconfigurationCallBack = { displayID, flags, userInfo in
+        let callback: CGDisplayReconfigurationCallBack = { _, flags, userInfo in
             guard let userInfo = userInfo else { return }
             let manager = Unmanaged<BlurOverlayManager>.fromOpaque(userInfo).takeUnretainedValue()
 

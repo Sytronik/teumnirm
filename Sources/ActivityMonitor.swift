@@ -57,7 +57,7 @@ class ActivityMonitor {
         IOHIDManagerSetDeviceMatchingMultiple(manager, deviceMatching as CFArray)
 
         // Set up input value callback
-        let inputCallback: IOHIDValueCallback = { context, result, sender, value in
+        let inputCallback: IOHIDValueCallback = { context, _, _, _ in
             guard let context = context else { return }
             let monitor = Unmanaged<ActivityMonitor>.fromOpaque(context).takeUnretainedValue()
             monitor.handleHIDInput()
@@ -143,7 +143,7 @@ class CGEventActivityMonitor {
                 | (1 << CGEventType.rightMouseUp.rawValue) | (1 << CGEventType.scrollWheel.rawValue))
 
         // Create event tap
-        let callback: CGEventTapCallBack = { proxy, type, event, refcon in
+        let callback: CGEventTapCallBack = { _, _, event, refcon in
             guard let refcon = refcon else { return Unmanaged.passUnretained(event) }
             let monitor = Unmanaged<CGEventActivityMonitor>.fromOpaque(refcon).takeUnretainedValue()
             monitor.handleEvent()
