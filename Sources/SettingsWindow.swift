@@ -382,31 +382,11 @@ class SettingsViewModel: ObservableObject {
 
     @Published var availableLights: [String: HueLight] = [:]
 
-    var statusText: String {
-        guard let appDelegate = appDelegate else { return L.Settings.statusUnknown }
-        switch appDelegate.state {
-        case .monitoring:
-            return L.Settings.statusMonitoring
-        case .breakTime:
-            return L.Settings.statusBreakTime
-        case .paused:
-            return L.Settings.statusPaused
-        }
-    }
+    // 상태 업데이트용 프로퍼티
+    @Published var statusText: String = L.Settings.statusUnknown
+    @Published var remainingTimeText: String?
 
-    var remainingTimeText: String? {
-        guard let appDelegate = appDelegate,
-            appDelegate.state == .monitoring,
-            let lastActivity = appDelegate.lastActivityTime
-        else { return nil }
-
-        let elapsed = Date().timeIntervalSince(lastActivity)
-        let remaining = max(0, appDelegate.breakInterval - elapsed)
-
-        let minutes = Int(remaining) / 60
-        let seconds = Int(remaining) % 60
-        return String(format: "%d:%02d", minutes, seconds)
-    }
+    private var updateTimer: Timer?
 
     init(appDelegate: AppDelegate) {
         self.appDelegate = appDelegate
@@ -419,6 +399,58 @@ class SettingsViewModel: ObservableObject {
         self.hueBridgeIP = defaults.string(forKey: SettingsKeys.hueBridgeIP) ?? ""
         self.hueUsername = defaults.string(forKey: SettingsKeys.hueUsername) ?? ""
         self.selectedLightIDs = Set(defaults.stringArray(forKey: SettingsKeys.hueLightIDs) ?? [])
+
+        // 초기 상태 업데이트
+        updateStatus()
+
+        // 타이머 시작 (1초마다 상태 업데이트)
+        startUpdateTimer()
+    }
+
+    deinit {
+        updateTimer?.invalidate()
+    }
+
+    private func startUpdateTimer() {
+        updateTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            self?.updateStatus()
+        }
+        // .common 모드에 추가하여 UI 상호작용 중에도 타이머가 동작하도록 함
+        if let timer = updateTimer {
+            RunLoop.main.add(timer, forMode: .common)
+        }
+    }
+
+    private func updateStatus() {
+        guard let appDelegate = appDelegate else {
+            statusText = L.Settings.statusUnknown
+            remainingTimeText = nil
+            return
+        }
+
+        // 상태 텍스트 업데이트
+        switch appDelegate.state {
+        case .monitoring:
+            statusText = L.Settings.statusMonitoring
+        case .breakTime:
+            statusText = L.Settings.statusBreakTime
+        case .paused:
+            statusText = L.Settings.statusPaused
+        }
+
+        // 남은 시간 업데이트 (usageStartTime 기준)
+        if appDelegate.state == .monitoring,
+            let usageStart = appDelegate.usageStartTime
+        {
+            let elapsed = Date().timeIntervalSince(usageStart)
+            let remaining = max(0, appDelegate.breakInterval - elapsed)
+
+            let minutes = Int(remaining) / 60
+            let seconds = Int(remaining) % 60
+            remainingTimeText = String(format: "%d:%02d", minutes, seconds)
+        } else {
+            remainingTimeText = nil
+        }
     }
 
     private func saveSettings() {
