@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-and-release:
+    runs-on: macos-14
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "5.9"
+
+      - name: Build Release
+        run: swift build -c release
+
+      - name: Create App Bundle
+        run: |
+          APP_NAME="Teumnirm"
+          BUILD_DIR=".build/release"
+          APP_DIR="build/${APP_NAME}.app"
+          CONTENTS_DIR="${APP_DIR}/Contents"
+          MACOS_DIR="${CONTENTS_DIR}/MacOS"
+          RESOURCES_DIR="${CONTENTS_DIR}/Resources"
+
+          mkdir -p "${MACOS_DIR}"
+          mkdir -p "${RESOURCES_DIR}"
+
+          cp "${BUILD_DIR}/Teumnirm" "${MACOS_DIR}/"
+          cp "Info.plist" "${CONTENTS_DIR}/"
+
+      - name: Create ZIP Archive
+        run: |
+          cd build
+          zip -r Teumnirm.zip Teumnirm.app
+          mv Teumnirm.zip ../
+
+      - name: Get Version
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Teumnirm ${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: false
+          files: Teumnirm.zip
+          generate_release_notes: true

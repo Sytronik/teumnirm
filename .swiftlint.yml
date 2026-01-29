@@ -1,0 +1,53 @@
+# SwiftLint Configuration
+
+excluded:
+  - .build
+  - build
+
+disabled_rules:
+  - trailing_comma
+  - identifier_name
+  - type_body_length
+  - file_length
+  - function_body_length
+
+opt_in_rules:
+  - empty_count
+  - empty_string
+  - closure_spacing
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - contains_over_range_nil_comparison
+  - discouraged_object_literal
+  - empty_collection_literal
+  - fallthrough
+  - first_where
+  - flatmap_over_map_reduce
+  - last_where
+  - modifier_order
+  - multiline_arguments
+  - multiline_parameters
+  - prefer_self_type_over_type_of_self
+  - prefer_zero_over_explicit_init
+  - redundant_nil_coalescing
+  - redundant_type_annotation
+  - sorted_first_last
+  - toggle_bool
+  - unneeded_parentheses_in_closure_argument
+  - vertical_whitespace_closing_braces
+  - yoda_condition
+
+line_length:
+  warning: 150
+  error: 200
+  ignores_comments: true
+  ignores_urls: true
+
+nesting:
+  type_level: 2
+  function_level: 3
+
+cyclomatic_complexity:
+  warning: 15
+  error: 25
