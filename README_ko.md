@@ -25,13 +25,19 @@ Teumnirm은 키보드/마우스 활동을 감지하여 1시간 연속 사용 시
 
 ## 설치
 
-### 요구사항
+### 다운로드
+
+[GitHub Releases](https://github.com/sytronik/teumnirm/releases) 페이지에서 최신 버전을 다운로드할 수 있습니다.
+
+### 직접 빌드
+
+#### 요구사항
 
 - macOS 13.0 (Ventura) 이상
 - Xcode Command Line Tools (`xcode-select --install`)
 - (선택) Philips Hue Bridge
 
-### 빌드
+#### 빌드
 
 ```bash
 git clone https://github.com/yourusername/teumnirm.git
@@ -42,7 +48,7 @@ chmod +x build.sh
 
 빌드된 앱은 `build/Teumnirm.app`에 생성됩니다.
 
-### 실행
+#### 실행
 
 ```bash
 open build/Teumnirm.app

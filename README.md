@@ -27,13 +27,19 @@ When it's time for a break:
 
 ## Installation
 
-### Requirements
+### Download
+
+You can download the latest version from the [GitHub Releases](https://github.com/sytronik/teumnirm/releases) page.
+
+### Build From Source
+
+#### Requirements
 
 - macOS 13.0 (Ventura) or later
 - Xcode Command Line Tools (`xcode-select --install`)
 - (Optional) Philips Hue Bridge
 
-### Build
+#### Build
 
 ```bash
 git clone https://github.com/yourusername/teumnirm.git
@@ -44,7 +50,7 @@ chmod +x build.sh
 
 The built app will be created at `build/Teumnirm.app`.
 
-### Run
+#### Run
 
 ```bash
 open build/Teumnirm.app
