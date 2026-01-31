@@ -2,6 +2,8 @@
 
 **A macOS app that monitors your computer usage time and reminds you to take breaks**
 
+> **Note**: This project was entirely built using AI tools (Claude, Cursor).
+
 The name "Teumnirm" combines the Korean word "teum" (틈, meaning break/gap) and the Middle Korean word "nirm" (니름, meaning notification/announcement), signifying "notifying you of break time."
 
 Teumnirm detects keyboard/mouse activity and blurs the screen after 1 hour of continuous use, while turning Philips Hue lights red to remind you to take a break.

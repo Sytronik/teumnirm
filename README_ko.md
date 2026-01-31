@@ -2,6 +2,8 @@
 
 **컴퓨터 사용 시간을 모니터링하고 휴식을 알려주는 macOS 앱**
 
+> **참고**: 이 프로젝트는 AI 툴(Claude, Cursor)을 사용하여 개발되었습니다.
+
 Teumnirm(틈니름)은 한국어 '틈'과 중세한국어 '니름'의 합성어로, 휴식 시간을 알려준다는 의미입니다.
 
 Teumnirm은 키보드/마우스 활동을 감지하여 1시간 연속 사용 시 화면을 블러 처리하고, Philips Hue 조명을 빨간색으로 바꿔 휴식을 알려줍니다.
@@ -121,6 +123,6 @@ teumnirm/
 
 MIT License
 
-## 감사의 말
+## 참고한 프로젝트
 
 - [posturr](https://github.com/tldev/posturr) - 화면 블러 구현 참고
