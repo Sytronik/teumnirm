@@ -76,6 +76,7 @@ Local network access permission is required to communicate with the Hue bridge.
 ### Basic Usage
 
 1. When you launch the app, a timer icon appears in the menu bar
+    ![스크린샷](assets/app_menu_en.png)
 2. The app automatically monitors keyboard/mouse activity
 3. After 1 hour (default) of continuous use, the screen becomes blurred
 4. Click the "Break Complete" button after your break, or it will auto-dismiss after 5 minutes
