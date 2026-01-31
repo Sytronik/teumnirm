@@ -27,9 +27,64 @@ When it's time for a break:
 
 ## Installation
 
-### Download
-
 You can download the latest version from the [GitHub Releases](https://github.com/sytronik/teumnirm/releases) page.
+
+## Usage
+
+### Basic Usage
+
+1. When you launch the app, a timer icon appears in the menu bar
+    ![Screenshot](assets/app_menu_en.png)
+2. The app automatically monitors keyboard/mouse activity
+3. After 1 hour (default) of continuous use, the screen becomes blurred
+4. Click the "Break Complete" button after your break, or it will auto-dismiss after 5 minutes
+
+### Permissions
+
+#### Input Monitoring
+
+Input monitoring permission is required to detect keyboard/mouse activity.
+
+1. **System Settings** > **Privacy & Security** > **Input Monitoring**
+2. Enable Teumnirm
+
+#### Local Network (When using Philips Hue)
+
+Local network access permission is required to communicate with the Hue bridge.
+
+### Philips Hue Setup
+
+1. Click the menu bar icon > **Settings...**
+2. Select the **Philips Hue** tab
+3. Enable **Use Philips Hue Integration**
+4. Use **Auto Discovery** to find the bridge (or enter the IP manually)
+5. Press the button on your Hue bridge, then click **Connect to Bridge**
+6. Select the lights to control
+
+### Settings Options
+
+- **Break Reminder Interval**: 20 to 120 minutes (default: 60 minutes)
+- **Auto Dismiss Time**: 3 to 15 minutes (default: 5 minutes)
+- **Compatibility Mode**: Enable if the blur is not displaying properly
+
+## Privacy
+
+- All data is processed locally
+- Keyboard/mouse input content is not recorded; only activity presence is detected
+- Network communication is only used for local communication with the Philips Hue bridge
+
+## License
+
+MIT License
+
+## Acknowledgments
+
+- [posturr](https://github.com/tldev/posturr) - Reference for screen blur implementation
+- [rainygirl's blog post](https://rainygirl.github.io/2021/11/pomodoro-room-light-timer) - Inspiration for Philips Hue integration
+
+---
+
+## For Developers
 
 ### Build From Source
 
@@ -44,7 +99,6 @@ You can download the latest version from the [GitHub Releases](https://github.co
 ```bash
 git clone https://github.com/yourusername/teumnirm.git
 cd teumnirm
-chmod +x build.sh
 ./build.sh
 ```
 
@@ -58,45 +112,7 @@ open build/Teumnirm.app
 
 Or copy `Teumnirm.app` to your `/Applications` folder.
 
-## Permissions
-
-### Input Monitoring
-
-Input monitoring permission is required to detect keyboard/mouse activity.
-
-1. **System Settings** > **Privacy & Security** > **Input Monitoring**
-2. Enable Teumnirm
-
-### Local Network (When using Philips Hue)
-
-Local network access permission is required to communicate with the Hue bridge.
-
-## Usage
-
-### Basic Usage
-
-1. When you launch the app, a timer icon appears in the menu bar
-    ![스크린샷](assets/app_menu_en.png)
-2. The app automatically monitors keyboard/mouse activity
-3. After 1 hour (default) of continuous use, the screen becomes blurred
-4. Click the "Break Complete" button after your break, or it will auto-dismiss after 5 minutes
-
-### Philips Hue Setup
-
-1. Click the menu bar icon > **Settings...**
-2. Select the **Philips Hue** tab
-3. Enable **Use Philips Hue Integration**
-4. Use **Auto Discovery** to find the bridge (or enter the IP manually)
-5. Press the button on your Hue bridge, then click **Connect to Bridge**
-6. Select the lights to control
-
-### Settings Options
-
-- **Break Reminder Interval**: 30 to 120 minutes (default: 60 minutes)
-- **Auto Dismiss Time**: 3 to 15 minutes (default: 5 minutes)
-- **Compatibility Mode**: Enable if the blur is not displaying properly
-
-## Project Structure
+### Project Structure
 
 ```
 teumnirm/
@@ -114,25 +130,10 @@ teumnirm/
 └── README.md
 ```
 
-## Tech Stack
+### Tech Stack
 
 - **Swift 5.9+**
 - **SwiftUI** (Settings window)
 - **AppKit** (Menu bar, overlay)
 - **IOKit/CoreGraphics** (Input event detection)
 - **Philips Hue REST API** (Light control)
-
-## Privacy
-
-- All data is processed locally
-- Keyboard/mouse input content is not recorded; only activity presence is detected
-- Network communication is only used for local communication with the Philips Hue bridge
-
-## License
-
-MIT License
-
-## Acknowledgments
-
-- [posturr](https://github.com/tldev/posturr) - Reference for screen blur implementation
-- [rainygirl's blog post](https://rainygirl.github.io/2021/11/pomodoro-room-light-timer) - Inspiration for Philips Hue integration
