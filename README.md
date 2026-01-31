@@ -134,3 +134,4 @@ MIT License
 ## Acknowledgments
 
 - [posturr](https://github.com/tldev/posturr) - Reference for screen blur implementation
+- [rainygirl's blog post](https://rainygirl.github.io/2021/11/pomodoro-room-light-timer) - Inspiration for Philips Hue integration

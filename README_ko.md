@@ -132,3 +132,4 @@ MIT License
 ## 참고한 프로젝트
 
 - [posturr](https://github.com/tldev/posturr) - 화면 블러 구현 참고
+- [rainygirl's blog post](https://rainygirl.github.io/2021/11/pomodoro-room-light-timer) - Philips Hue 연동 아이디어
