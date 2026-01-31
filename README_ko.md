@@ -27,6 +27,18 @@ Teumnirm은 키보드/마우스 활동을 감지하여 55분 연속 사용 시 �
 
 [GitHub Releases](https://github.com/sytronik/teumnirm/releases) 페이지에서 최신 버전을 다운로드할 수 있습니다.
 
+### "손상되었기 때문에 열 수 없습니다" 경고 해결
+
+다운로드한 앱을 처음 실행할 때 **"Teumnirm이(가) 손상되었기 때문에 열 수 없습니다"** 경고가 나타날 수 있습니다. 이는 앱이 Apple의 공증(notarization)을 받지 않아서 발생하는 현상입니다.
+
+터미널에서 다음 명령어를 실행하면 해결됩니다:
+
+```bash
+xattr -cr ~/Downloads/Teumnirm.app
+```
+
+> 다운로드 위치가 다르다면 경로를 적절히 수정하세요 (예: `/Applications/Teumnirm.app`)
+
 ## 사용 방법
 
 ### 기본 사용

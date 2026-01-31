@@ -29,6 +29,18 @@ When it's time for a break:
 
 You can download the latest version from the [GitHub Releases](https://github.com/sytronik/teumnirm/releases) page.
 
+### "damaged and can't be opened" Warning
+
+When you first launch the downloaded app, you may see a warning saying **"Teumnirm is damaged and can't be opened"**. This happens because the app is not notarized by Apple.
+
+Run the following command in Terminal to fix this:
+
+```bash
+xattr -cr ~/Downloads/Teumnirm.app
+```
+
+> If you downloaded to a different location, adjust the path accordingly (e.g., `/Applications/Teumnirm.app`)
+
 ## Usage
 
 ### Basic Usage
