@@ -61,14 +61,20 @@ class ConfirmWindowController {
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.hasShadow = true
 
-        // Create content view with visual effect
-        let contentView = NSVisualEffectView(frame: NSRect(origin: .zero, size: windowRect.size))
+        // Create transparent container view
+        let containerView = NSView(frame: NSRect(origin: .zero, size: windowRect.size))
+        containerView.wantsLayer = true
+        containerView.layer?.backgroundColor = NSColor.clear.cgColor
+
+        // Create visual effect view as subview
+        let contentView = NSVisualEffectView(frame: containerView.bounds)
         contentView.blendingMode = .behindWindow
         contentView.material = .hudWindow
         contentView.state = .active
         contentView.wantsLayer = true
         contentView.layer?.cornerRadius = 20
         contentView.layer?.masksToBounds = true
+        containerView.addSubview(contentView)
 
         // Title label
         let titleLabel = NSTextField(labelWithString: L.ConfirmWindow.title)
@@ -88,7 +94,8 @@ class ConfirmWindowController {
 
         // Countdown label
         let countdown = NSTextField(
-            labelWithString: L.ConfirmWindow.autoDismissIn(minutes: 5, seconds: 0))
+            labelWithString: L.ConfirmWindow.autoDismissIn(minutes: 5, seconds: 0)
+        )
         countdown.font = NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .regular)
         countdown.textColor = .white.withAlphaComponent(0.6)
         countdown.alignment = .center
@@ -98,10 +105,11 @@ class ConfirmWindowController {
 
         // Confirm button
         let button = NSButton(
-            title: L.ConfirmWindow.endBreak, target: self, action: #selector(confirmButtonClicked))
-        button.bezelStyle = .rounded
-        button.font = NSFont.systemFont(ofSize: 16, weight: .medium)
-        button.frame = NSRect(x: (windowWidth - 150) / 2, y: 25, width: 150, height: 40)
+            title: L.ConfirmWindow.endBreak, target: self, action: #selector(confirmButtonClicked)
+        )
+        button.bezelStyle = .regularSquare
+        button.font = NSFont.systemFont(ofSize: 15, weight: .medium)
+        button.frame = NSRect(x: (windowWidth - 100) / 2, y: 25, width: 100, height: 40)
         button.keyEquivalent = "\r"  // Enter key
 
         // Style the button
@@ -110,7 +118,7 @@ class ConfirmWindowController {
 
         contentView.addSubview(button)
 
-        window.contentView = contentView
+        window.contentView = containerView
         window.makeKeyAndOrderFront(nil)
 
         self.window = window
