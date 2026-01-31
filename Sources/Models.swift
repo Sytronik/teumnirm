@@ -6,7 +6,7 @@ import Foundation
 enum AppConstants {
     static let appName = "Teumnirm"
     static let appNameKorean = "틈니름"
-    static let defaultBreakInterval: TimeInterval = 60 * 60  // 1시간
+    static let defaultBreakInterval: TimeInterval = 55 * 60  // 55분
     static let autoRestoreInterval: TimeInterval = 5 * 60  // 5분
     static let idleThreshold: TimeInterval = 3 * 60  // 3분 - 이 시간 이상 비활동 시 휴식으로 간주
     static let maxBlurRadius: Int32 = 64

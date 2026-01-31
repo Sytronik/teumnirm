@@ -6,7 +6,7 @@
 
 The name "Teumnirm" combines the Korean word "teum" (틈, meaning break/gap) and the Middle Korean word "nirm" (니름, meaning notification/announcement), signifying "notifying you of break time."
 
-Teumnirm detects keyboard/mouse activity and blurs the screen after 1 hour of continuous use, while turning Philips Hue lights red to remind you to take a break.
+Teumnirm detects keyboard/mouse activity and blurs the screen after 55 minutes of continuous use, while turning Philips Hue lights red to remind you to take a break.
 
 [한국어 README](README_ko.md)
 
@@ -36,7 +36,7 @@ You can download the latest version from the [GitHub Releases](https://github.co
 1. When you launch the app, a timer icon appears in the menu bar
     ![Screenshot](assets/app_menu_en.png)
 2. The app automatically monitors keyboard/mouse activity
-3. After 1 hour (default) of continuous use, the screen becomes blurred
+3. After 55 minutes (default) of continuous use, the screen becomes blurred
 4. Click the "Break Complete" button after your break, or it will auto-dismiss after 5 minutes
 
 ### Permissions
@@ -63,7 +63,7 @@ Local network access permission is required to communicate with the Hue bridge.
 
 ### Settings Options
 
-- **Break Reminder Interval**: 20 to 120 minutes (default: 60 minutes)
+- **Break Reminder Interval**: 20 to 120 minutes (default: 55 minutes)
 - **Auto Dismiss Time**: 3 to 15 minutes (default: 5 minutes)
 - **Compatibility Mode**: Enable if the blur is not displaying properly
 
