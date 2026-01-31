@@ -113,8 +113,8 @@ class ActivityMonitor {
 
 // MARK: - Alternative: CGEvent-based Monitor
 
-/// Alternative activity monitor using CGEvent tap (requires Accessibility permission)
-/// This is more reliable but requires explicit accessibility permission
+/// Alternative activity monitor using CGEvent tap (requires Input monitoring permission)
+/// This is more reliable but requires explicit input monitoring permission
 class CGEventActivityMonitor {
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
@@ -163,7 +163,7 @@ class CGEventActivityMonitor {
             )
         else {
             print(
-                "[CGEventActivityMonitor] Failed to create event tap. Check Accessibility permissions."
+                "[CGEventActivityMonitor] Failed to create event tap. Check Input Monitoring permissions."
             )
             return false
         }
@@ -217,15 +217,15 @@ class CGEventActivityMonitor {
 
     // MARK: - Permission Check
 
-    static func checkAccessibilityPermission() -> Bool {
+    static func checkInputMonitoringPermission() -> Bool {
         let trusted = AXIsProcessTrusted()
         if !trusted {
-            print("[CGEventActivityMonitor] Accessibility permission not granted")
+            print("[CGEventActivityMonitor] Input monitoring permission not granted")
         }
         return trusted
     }
 
-    static func requestAccessibilityPermission() {
+    static func requestInputMonitoringPermission() {
         let options =
             [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
         AXIsProcessTrustedWithOptions(options)

@@ -22,6 +22,7 @@ enum SettingsKeys {
     static let hueLightIDs = "hueLightIDs"
     static let isEnabled = "isEnabled"
     static let useCompatibilityMode = "useCompatibilityMode"
+    static let localNetworkPermissionRequested = "localNetworkPermissionRequested"
 }
 
 // MARK: - App State

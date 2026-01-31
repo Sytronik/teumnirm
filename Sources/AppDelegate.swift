@@ -202,9 +202,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if !activityMonitor!.startMonitoring() {
             print("[AppDelegate] Failed to start activity monitor")
             // 권한이 없는 경우에만 권한 요청
-            if !CGEventActivityMonitor.checkAccessibilityPermission() {
-                print("[AppDelegate] Requesting accessibility permission")
-                CGEventActivityMonitor.requestAccessibilityPermission()
+            if !CGEventActivityMonitor.checkInputMonitoringPermission() {
+                print("[AppDelegate] Requesting input monitoring permission")
+                CGEventActivityMonitor.requestInputMonitoringPermission()
             }
         }
 

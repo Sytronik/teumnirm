@@ -247,5 +247,27 @@ enum L {
                 return "Could not load lights: \(error)"
             }
         }
+
+        static var localNetworkPermissionTitle: String {
+            isKorean ? "로컬 네트워크 권한 필요" : "Local Network Permission Required"
+        }
+
+        static var localNetworkPermissionMessage: String {
+            if isKorean {
+                return
+                    "Philips Hue 브릿지에 연결하려면 로컬 네트워크 접근 권한이 필요합니다.\n\n'확인'을 누르면 시스템 권한 요청이 표시됩니다. '허용'을 선택해 주세요."
+            } else {
+                return
+                    "Local network access permission is required to connect to your Philips Hue bridge.\n\nClick 'OK' and select 'Allow' when the system permission prompt appears."
+            }
+        }
+
+        static var ok: String {
+            isKorean ? "확인" : "OK"
+        }
+
+        static var requestingPermission: String {
+            isKorean ? "권한 요청 중..." : "Requesting permission..."
+        }
     }
 }

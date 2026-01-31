@@ -273,6 +273,30 @@ class HueController {
         targetLightIDs = defaults.stringArray(forKey: SettingsKeys.hueLightIDs) ?? []
     }
 
+    /// Trigger local network permission dialog by attempting to access a local IP
+    /// This is necessary because macOS requires explicit permission for local network access
+    func triggerLocalNetworkPermission() async {
+        // Try to access a common local network gateway to trigger the permission dialog
+        // This will prompt the user to allow local network access if not already granted
+        let testIPs = ["192.168.0.1", "192.168.1.1", "10.0.0.1"]
+
+        for ip in testIPs {
+            guard let url = URL(string: "http://\(ip)/") else { continue }
+
+            var request = URLRequest(url: url)
+            request.timeoutInterval = 2  // Short timeout since we just need to trigger the dialog
+
+            do {
+                _ = try await session.data(for: request)
+            } catch {
+                // Error is expected - we just need to trigger the permission dialog
+            }
+
+            // Only need one attempt to trigger the dialog
+            break
+        }
+    }
+
     func saveToDefaults() {
         let defaults = UserDefaults.standard
         defaults.set(bridgeIP, forKey: SettingsKeys.hueBridgeIP)

@@ -52,11 +52,11 @@ Or copy `Teumnirm.app` to your `/Applications` folder.
 
 ## Permissions
 
-### Accessibility
+### Input Monitoring
 
-Accessibility permission is required to detect keyboard/mouse activity.
+Input monitoring permission is required to detect keyboard/mouse activity.
 
-1. **System Settings** > **Privacy & Security** > **Accessibility**
+1. **System Settings** > **Privacy & Security** > **Input Monitoring**
 2. Enable Teumnirm
 
 ### Local Network (When using Philips Hue)

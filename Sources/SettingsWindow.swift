@@ -144,11 +144,44 @@ struct HueSettingsView: View {
     @State private var isRegistering = false
     @State private var errorMessage: String?
     @State private var showLinkButtonAlert = false
+    @State private var showLocalNetworkPermissionAlert = false
+    @State private var isRequestingPermission = false
+    @State private var pendingHueEnable = false
 
     var body: some View {
         Form {
             Section {
-                Toggle(L.Hue.enableIntegration, isOn: $viewModel.hueEnabled)
+                Toggle(
+                    L.Hue.enableIntegration,
+                    isOn: Binding(
+                        get: { viewModel.hueEnabled },
+                        set: { newValue in
+                            if newValue && !viewModel.hueEnabled {
+                                // Check if permission was already requested
+                                let permissionAlreadyRequested = UserDefaults.standard.bool(
+                                    forKey: SettingsKeys.localNetworkPermissionRequested)
+                                if permissionAlreadyRequested {
+                                    // Permission was already requested, just enable
+                                    viewModel.hueEnabled = true
+                                } else {
+                                    // Show permission alert when enabling Hue for the first time
+                                    pendingHueEnable = true
+                                    showLocalNetworkPermissionAlert = true
+                                }
+                            } else {
+                                viewModel.hueEnabled = newValue
+                            }
+                        }
+                    ))
+
+                if isRequestingPermission {
+                    HStack {
+                        ProgressView()
+                            .scaleEffect(0.7)
+                        Text(L.Hue.requestingPermission)
+                            .foregroundColor(.secondary)
+                    }
+                }
             }
 
             if viewModel.hueEnabled {
@@ -252,6 +285,36 @@ struct HueSettingsView: View {
             }
         } message: {
             Text(L.Hue.pressBridgeButtonMessage)
+        }
+        .alert(L.Hue.localNetworkPermissionTitle, isPresented: $showLocalNetworkPermissionAlert) {
+            Button(L.Hue.cancel, role: .cancel) {
+                pendingHueEnable = false
+            }
+            Button(L.Hue.ok) {
+                requestLocalNetworkPermission()
+            }
+        } message: {
+            Text(L.Hue.localNetworkPermissionMessage)
+        }
+    }
+
+    private func requestLocalNetworkPermission() {
+        guard pendingHueEnable else { return }
+
+        isRequestingPermission = true
+
+        Task {
+            await viewModel.appDelegate?.hueController.triggerLocalNetworkPermission()
+
+            await MainActor.run {
+                // Mark that permission has been requested
+                UserDefaults.standard.set(
+                    true, forKey: SettingsKeys.localNetworkPermissionRequested)
+
+                isRequestingPermission = false
+                viewModel.hueEnabled = true
+                pendingHueEnable = false
+            }
         }
     }
 
