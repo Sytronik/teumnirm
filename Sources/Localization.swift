@@ -119,6 +119,14 @@ enum L {
             isKorean ? "화면 블러" : "Screen Blur"
         }
 
+        static var menuBar: String {
+            isKorean ? "메뉴바" : "Menu Bar"
+        }
+
+        static var showTimerInMenuBar: String {
+            isKorean ? "메뉴바에 남은 시간 표시" : "Show remaining time in menu bar"
+        }
+
         static var currentStatus: String {
             isKorean ? "현재 상태" : "Current Status"
         }

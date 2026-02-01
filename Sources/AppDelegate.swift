@@ -65,6 +65,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    var showTimerInMenuBar: Bool = false {
+        didSet {
+            UserDefaults.standard.set(showTimerInMenuBar, forKey: SettingsKeys.showTimerInMenuBar)
+            updateMenuBarTimerDisplay()
+        }
+    }
+
     // MARK: - App Lifecycle
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -238,6 +245,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         hueEnabled = defaults.bool(forKey: SettingsKeys.hueEnabled)
+        showTimerInMenuBar = defaults.bool(forKey: SettingsKeys.showTimerInMenuBar)
 
         hueController.loadFromDefaults()
 
@@ -371,6 +379,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
               let remaining = remainingBreakTime()
         else {
             timerMenuItem.title = ""
+            updateMenuBarTimerDisplay()
             return
         }
 
@@ -378,6 +387,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let seconds = Int(remaining) % 60
 
         timerMenuItem.title = L.Menu.nextBreakIn(minutes: minutes, seconds: seconds)
+        updateMenuBarTimerDisplay(minutes: minutes, seconds: seconds)
+    }
+
+    private func updateMenuBarTimerDisplay(minutes: Int? = nil, seconds: Int? = nil) {
+        guard let statusItem = statusItem, let button = statusItem.button else { return }
+
+        if showTimerInMenuBar, let minutes = minutes, let seconds = seconds {
+            button.title = String(format: "%d:%02d", minutes, seconds)
+            button.image = nil
+        } else {
+            button.title = ""
+            // Restore icon based on current state
+            switch state {
+            case .monitoring:
+                button.image = NSImage(
+                    systemSymbolName: "timer", accessibilityDescription: "Monitoring")
+            case .breakTime:
+                button.image = NSImage(
+                    systemSymbolName: "pause.circle.fill", accessibilityDescription: "Break Time")
+            case .paused:
+                button.image = NSImage(
+                    systemSymbolName: "pause.circle", accessibilityDescription: "Paused")
+            }
+            button.image?.isTemplate = true
+        }
     }
 
     // MARK: - Activity Handling
@@ -427,27 +461,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         switch state {
         case .monitoring:
             statusMenuItem.title = L.Menu.statusMonitoring
-            statusItem.button?.image = NSImage(
-                systemSymbolName: "timer", accessibilityDescription: "Monitoring")
             enabledMenuItem.state = .on
             confirmMenuItem.isHidden = true
 
         case .breakTime:
             statusMenuItem.title = L.Menu.statusBreakTime
-            statusItem.button?.image = NSImage(
-                systemSymbolName: "pause.circle.fill", accessibilityDescription: "Break Time")
             enabledMenuItem.state = .on
             confirmMenuItem.isHidden = false
             timerMenuItem.title = ""
 
         case .paused:
             statusMenuItem.title = L.Menu.statusPaused
-            statusItem.button?.image = NSImage(
-                systemSymbolName: "pause.circle", accessibilityDescription: "Paused")
             enabledMenuItem.state = .off
             confirmMenuItem.isHidden = true
             timerMenuItem.title = ""
         }
+
+        // Update menu bar icon/timer display
+        updateMenuBarTimerDisplay()
     }
 
     // MARK: - Menu Actions

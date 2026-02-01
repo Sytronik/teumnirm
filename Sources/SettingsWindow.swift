@@ -106,6 +106,12 @@ struct GeneralSettingsView: View {
             }
 
             Section {
+                Toggle(L.Settings.showTimerInMenuBar, isOn: $viewModel.showTimerInMenuBar)
+            } header: {
+                Text(L.Settings.menuBar)
+            }
+
+            Section {
                 Toggle(L.Settings.useCompatibilityMode, isOn: $viewModel.useCompatibilityMode)
             } header: {
                 Text(L.Settings.screenBlur)
@@ -414,6 +420,13 @@ class SettingsViewModel: ObservableObject {
         }
     }
 
+    @Published var showTimerInMenuBar: Bool {
+        didSet {
+            appDelegate?.showTimerInMenuBar = showTimerInMenuBar
+            saveSettings()
+        }
+    }
+
     @Published var hueEnabled: Bool {
         didSet {
             appDelegate?.hueEnabled = hueEnabled
@@ -457,6 +470,7 @@ class SettingsViewModel: ObservableObject {
         self.breakIntervalMinutes = Int(appDelegate.breakInterval / 60)
         self.autoRestoreMinutes = Int(appDelegate.autoRestoreInterval / 60)
         self.useCompatibilityMode = defaults.bool(forKey: SettingsKeys.useCompatibilityMode)
+        self.showTimerInMenuBar = defaults.bool(forKey: SettingsKeys.showTimerInMenuBar)
         self.hueEnabled = defaults.bool(forKey: SettingsKeys.hueEnabled)
         self.hueBridgeIP = defaults.string(forKey: SettingsKeys.hueBridgeIP) ?? ""
         self.hueUsername = defaults.string(forKey: SettingsKeys.hueUsername) ?? ""
@@ -517,6 +531,7 @@ class SettingsViewModel: ObservableObject {
         let defaults = UserDefaults.standard
         defaults.set(breakIntervalMinutes * 60, forKey: SettingsKeys.breakInterval)
         defaults.set(useCompatibilityMode, forKey: SettingsKeys.useCompatibilityMode)
+        defaults.set(showTimerInMenuBar, forKey: SettingsKeys.showTimerInMenuBar)
         defaults.set(hueEnabled, forKey: SettingsKeys.hueEnabled)
         defaults.set(hueBridgeIP, forKey: SettingsKeys.hueBridgeIP)
         defaults.set(hueUsername, forKey: SettingsKeys.hueUsername)

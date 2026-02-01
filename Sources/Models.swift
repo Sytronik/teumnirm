@@ -24,6 +24,7 @@ enum SettingsKeys {
     static let useCompatibilityMode = "useCompatibilityMode"
     static let localNetworkPermissionRequested = "localNetworkPermissionRequested"
     static let hasShownWelcome = "hasShownWelcome"
+    static let showTimerInMenuBar = "showTimerInMenuBar"
 }
 
 // MARK: - App State
