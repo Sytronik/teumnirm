@@ -272,4 +272,40 @@ enum L {
             isKorean ? "권한 요청 중..." : "Requesting permission..."
         }
     }
+
+    // MARK: - Welcome Window
+
+    enum Welcome {
+        static var title: String {
+            isKorean ? "Teumnirm이 실행되었습니다" : "Teumnirm is Running"
+        }
+
+        static var description: String {
+            if isKorean {
+                return "틈니름은 메뉴바 앱입니다.\n화면 상단의 타이머 아이콘을 클릭하여\n설정을 변경하거나 상태를 확인하세요."
+            } else {
+                return "Teumnirm runs in the menu bar.\nClick the timer icon at the top of your screen\nto change settings or check status."
+            }
+        }
+
+        static var gotIt: String {
+            isKorean ? "확인" : "Got it"
+        }
+
+        static var menuBarHint: String {
+            isKorean ? "메뉴바에서 찾아보세요 →" : "Find it in the menu bar →"
+        }
+    }
+
+    // MARK: - Status Popover
+
+    enum Popover {
+        static var monitoringStarted: String {
+            isKorean ? "모니터링 시작됨" : "Monitoring Started"
+        }
+
+        static var clickForOptions: String {
+            isKorean ? "클릭하여 설정 및 상태 확인" : "Click for settings and status"
+        }
+    }
 }

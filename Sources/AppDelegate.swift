@@ -12,6 +12,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var enabledMenuItem: NSMenuItem!
     private var confirmMenuItem: NSMenuItem!
     private var timerMenuItem: NSMenuItem!
+    private var statusPopover: NSPopover?
 
     // MARK: - Managers
 
@@ -20,6 +21,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var activityMonitor: CGEventActivityMonitor?
     private var confirmWindowController = ConfirmWindowController()
     private var settingsWindowController = SettingsWindowController()
+    private var welcomeWindowController = WelcomeWindowController()
 
     // MARK: - State
 
@@ -72,6 +74,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupConfirmWindow()
         blurOverlayManager.setupOverlayWindows()
         blurOverlayManager.registerDisplayChangeCallback()
+
+        // Show welcome window on first launch
+        showWelcomeWindowIfNeeded()
 
         // Start monitoring
         state = .monitoring
@@ -160,6 +165,68 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         confirmWindowController.autoRestoreInterval = autoRestoreInterval
         confirmWindowController.onConfirm = { [weak self] in
             self?.endBreakTime()
+        }
+    }
+
+    private func showWelcomeWindowIfNeeded() {
+        let defaults = UserDefaults.standard
+        let hasShownWelcome = defaults.bool(forKey: SettingsKeys.hasShownWelcome)
+
+        if hasShownWelcome {
+            // Show brief status popover for returning users
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.showStatusPopover()
+            }
+            return
+        }
+
+        welcomeWindowController.onDismiss = { [weak self] in
+            defaults.set(true, forKey: SettingsKeys.hasShownWelcome)
+            // Show popover to point to menu bar icon after welcome window closes
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                self?.showStatusPopover()
+            }
+        }
+        welcomeWindowController.showWindow()
+    }
+
+    private func showStatusPopover() {
+        guard let button = statusItem.button else { return }
+
+        // Create popover content
+        let contentView = NSView(frame: NSRect(x: 0, y: 0, width: 200, height: 50))
+
+        // Title label
+        let titleLabel = NSTextField(labelWithString: L.Popover.monitoringStarted)
+        titleLabel.font = NSFont.systemFont(ofSize: 13, weight: .semibold)
+        titleLabel.textColor = .labelColor
+        titleLabel.frame = NSRect(x: 12, y: 24, width: 176, height: 18)
+        contentView.addSubview(titleLabel)
+
+        // Subtitle label
+        let subtitleLabel = NSTextField(labelWithString: L.Popover.clickForOptions)
+        subtitleLabel.font = NSFont.systemFont(ofSize: 11, weight: .regular)
+        subtitleLabel.textColor = .secondaryLabelColor
+        subtitleLabel.frame = NSRect(x: 12, y: 8, width: 176, height: 14)
+        contentView.addSubview(subtitleLabel)
+
+        // Create view controller
+        let viewController = NSViewController()
+        viewController.view = contentView
+
+        // Create and show popover
+        let popover = NSPopover()
+        popover.contentViewController = viewController
+        popover.behavior = .transient
+        popover.animates = true
+
+        statusPopover = popover
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+
+        // Auto-close after 3 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+            self?.statusPopover?.performClose(nil)
+            self?.statusPopover = nil
         }
     }
 

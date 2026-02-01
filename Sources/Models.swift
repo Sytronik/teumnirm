@@ -23,6 +23,7 @@ enum SettingsKeys {
     static let isEnabled = "isEnabled"
     static let useCompatibilityMode = "useCompatibilityMode"
     static let localNetworkPermissionRequested = "localNetworkPermissionRequested"
+    static let hasShownWelcome = "hasShownWelcome"
 }
 
 // MARK: - App State
