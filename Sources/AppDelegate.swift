@@ -41,7 +41,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var accumulatedUsageTime: TimeInterval = 0
     private var usageResumeTime: Date?
     private var isUsagePaused = false
-    var lastActivityTime: Date?  // 마지막 활동 시간 (비활동 감지용)
+    var lastActivityTime: Date?  // Last activity time (used for idle detection)
 
     // MARK: - Settings
 
@@ -205,7 +205,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Start activity monitor
         if !activityMonitor!.startMonitoring() {
             print("[AppDelegate] Failed to start activity monitor")
-            // 권한이 없는 경우에만 권한 요청
+            // Request permission only when it's not granted
             if !CGEventActivityMonitor.checkInputMonitoringPermission() {
                 print("[AppDelegate] Requesting input monitoring permission")
                 CGEventActivityMonitor.requestInputMonitoringPermission()
@@ -271,7 +271,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.checkUsageTime()
         }
-        // .common 모드에 추가하여 메뉴가 열려 있을 때도 타이머가 동작하도록 함
+        // Add to .common mode so the timer runs while the menu is open
         RunLoop.main.add(timer, forMode: .common)
         usageTimer = timer
     }
@@ -281,7 +281,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.updateTimerDisplay()
         }
-        // .common 모드에 추가하여 메뉴가 열려 있을 때도 타이머가 동작하도록 함
+        // Add to .common mode so the timer runs while the menu is open
         RunLoop.main.add(timer, forMode: .common)
         timerUpdateTimer = timer
     }

@@ -1,0 +1,8 @@
+---
+description: Require swiftlint --strict after code changes
+alwaysApply: true
+---
+
+# SwiftLint Strict Check
+
+- After making code changes, run `swiftlint --strict`.

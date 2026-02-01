@@ -444,7 +444,7 @@ class SettingsViewModel: ObservableObject {
 
     @Published var availableLights: [String: HueLight] = [:]
 
-    // 상태 업데이트용 프로퍼티
+    // Properties used for status updates
     @Published var statusText: String = L.Settings.statusUnknown
     @Published var remainingTimeText: String?
 
@@ -462,10 +462,10 @@ class SettingsViewModel: ObservableObject {
         self.hueUsername = defaults.string(forKey: SettingsKeys.hueUsername) ?? ""
         self.selectedLightIDs = Set(defaults.stringArray(forKey: SettingsKeys.hueLightIDs) ?? [])
 
-        // 초기 상태 업데이트
+        // Initial status update
         updateStatus()
 
-        // 타이머 시작 (1초마다 상태 업데이트)
+        // Start timer (update status every second)
         startUpdateTimer()
     }
 
@@ -477,7 +477,7 @@ class SettingsViewModel: ObservableObject {
         updateTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.updateStatus()
         }
-        // .common 모드에 추가하여 UI 상호작용 중에도 타이머가 동작하도록 함
+        // Add to .common mode so the timer runs during UI interaction
         if let timer = updateTimer {
             RunLoop.main.add(timer, forMode: .common)
         }
@@ -490,7 +490,7 @@ class SettingsViewModel: ObservableObject {
             return
         }
 
-        // 상태 텍스트 업데이트
+        // Update status text
         switch appDelegate.state {
         case .monitoring:
             statusText = L.Settings.statusMonitoring
@@ -500,7 +500,7 @@ class SettingsViewModel: ObservableObject {
             statusText = L.Settings.statusPaused
         }
 
-        // 남은 시간 업데이트 (비활동 시 일시정지 반영)
+        // Update remaining time (reflect pause during idle)
         if appDelegate.state == .monitoring,
             let remaining = appDelegate.remainingBreakTime()
         {

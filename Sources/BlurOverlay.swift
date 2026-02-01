@@ -131,7 +131,7 @@ class BlurOverlayManager {
         let timer = Timer(timeInterval: 0.033, repeats: true) {
             [weak self] _ in self?.updateBlur()
         }
-        // .common 모드에 추가하여 UI 상호작용 중에도 애니메이션이 동작하도록 함
+        // Add to .common mode so the animation runs during UI interaction
         RunLoop.main.add(timer, forMode: .common)
         animationTimer = timer
     }

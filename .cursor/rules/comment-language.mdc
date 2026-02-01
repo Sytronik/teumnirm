@@ -1,0 +1,9 @@
+---
+description: Require English in code comments
+alwaysApply: true
+---
+
+# Comment Language
+
+- Write all code comments in English.
+- When translating existing comments, keep them concise and clear.
