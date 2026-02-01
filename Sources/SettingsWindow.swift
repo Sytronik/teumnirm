@@ -500,12 +500,10 @@ class SettingsViewModel: ObservableObject {
             statusText = L.Settings.statusPaused
         }
 
-        // 남은 시간 업데이트 (usageStartTime 기준)
+        // 남은 시간 업데이트 (비활동 시 일시정지 반영)
         if appDelegate.state == .monitoring,
-            let usageStart = appDelegate.usageStartTime
+            let remaining = appDelegate.remainingBreakTime()
         {
-            let elapsed = Date().timeIntervalSince(usageStart)
-            let remaining = max(0, appDelegate.breakInterval - elapsed)
 
             let minutes = Int(remaining) / 60
             let seconds = Int(remaining) % 60

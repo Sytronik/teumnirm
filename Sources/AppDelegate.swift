@@ -38,7 +38,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var usageTimer: Timer?
     private var timerUpdateTimer: Timer?
-    var usageStartTime: Date?  // 연속 사용 시작 시간
+    private var accumulatedUsageTime: TimeInterval = 0
+    private var usageResumeTime: Date?
+    private var isUsagePaused = false
     var lastActivityTime: Date?  // 마지막 활동 시간 (비활동 감지용)
 
     // MARK: - Settings
@@ -195,7 +197,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func startMonitoring() {
         let now = Date()
-        usageStartTime = now
+        accumulatedUsageTime = 0
+        usageResumeTime = now
+        isUsagePaused = false
         lastActivityTime = now
 
         // Start activity monitor
@@ -283,9 +287,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func checkUsageTime() {
-        guard state == .monitoring, let usageStart = usageStartTime else { return }
+        guard state == .monitoring else { return }
 
-        let elapsed = Date().timeIntervalSince(usageStart)
+        let now = Date()
+        pauseUsageTimerIfNeeded(at: now)
+
+        guard let elapsed = currentUsageElapsedTime(at: now) else { return }
 
         if elapsed >= breakInterval {
             state = .breakTime
@@ -293,13 +300,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func updateTimerDisplay() {
-        guard state == .monitoring, let usageStart = usageStartTime else {
+        guard state == .monitoring,
+              let remaining = remainingBreakTime()
+        else {
             timerMenuItem.title = ""
             return
         }
-
-        let elapsed = Date().timeIntervalSince(usageStart)
-        let remaining = max(0, breakInterval - elapsed)
 
         let minutes = Int(remaining) / 60
         let seconds = Int(remaining) % 60
@@ -314,16 +320,38 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let now = Date()
 
-        // 마지막 활동 이후 idleThreshold(3분) 이상 지났으면 휴식한 것으로 간주
-        // → 연속 사용 시간 리셋
-        if let lastActivity = lastActivityTime,
-            now.timeIntervalSince(lastActivity) >= AppConstants.idleThreshold
-        {
-            usageStartTime = now
-            print("[AppDelegate] Idle detected, resetting usage timer")
+        if isUsagePaused {
+            isUsagePaused = false
+            usageResumeTime = now
+            print("[AppDelegate] Activity detected, resuming usage timer")
         }
 
         lastActivityTime = now
+    }
+
+    private func pauseUsageTimerIfNeeded(at now: Date) {
+        guard !isUsagePaused, let lastActivity = lastActivityTime else { return }
+
+        if now.timeIntervalSince(lastActivity) >= AppConstants.idleThreshold {
+            if let resumeTime = usageResumeTime {
+                accumulatedUsageTime += now.timeIntervalSince(resumeTime)
+            }
+            isUsagePaused = true
+            usageResumeTime = now
+            print("[AppDelegate] Idle detected, pausing usage timer")
+        }
+    }
+
+    func currentUsageElapsedTime(at now: Date = Date()) -> TimeInterval? {
+        guard state == .monitoring, let resumeTime = usageResumeTime else { return nil }
+
+        let activeElapsed = isUsagePaused ? 0 : now.timeIntervalSince(resumeTime)
+        return accumulatedUsageTime + activeElapsed
+    }
+
+    func remainingBreakTime(at now: Date = Date()) -> TimeInterval? {
+        guard let elapsed = currentUsageElapsedTime(at: now) else { return nil }
+        return max(0, breakInterval - elapsed)
     }
 
     // MARK: - UI Updates
@@ -373,7 +401,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             endBreakTime()
         } else if state == .monitoring {
             let now = Date()
-            usageStartTime = now
+            accumulatedUsageTime = 0
+            usageResumeTime = now
+            isUsagePaused = false
             lastActivityTime = now
             print("[AppDelegate] Timer reset")
         }
