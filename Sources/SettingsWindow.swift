@@ -24,7 +24,7 @@ class SettingsWindowController {
         let window = NSWindow(contentViewController: hostingController)
         window.title = L.Settings.windowTitle
         window.styleMask = [.titled, .closable]
-        window.setContentSize(NSSize(width: 450, height: 500))
+        window.setContentSize(NSSize(width: 450, height: 530))
         window.center()
         window.isReleasedWhenClosed = false
 
@@ -64,7 +64,7 @@ struct SettingsView: View {
                 }
         }
         .padding()
-        .frame(minWidth: 400, minHeight: 400)
+        .frame(minWidth: 400, minHeight: 430)
     }
 }
 
