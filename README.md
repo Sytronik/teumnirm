@@ -13,7 +13,7 @@ Teumnirm detects keyboard/mouse activity and blurs the screen after 55 minutes o
 ## Features
 
 - **Activity Monitoring**: Tracks computer usage time by detecting keyboard/mouse input
-- **Inactivity Pause**: Pauses the timer after 3 minutes of inactivity and resumes when activity is detected
+- **Inactivity Detection**: Pauses the timer after 3 minutes of inactivity, and completely resets the timer if inactive for half of the break interval (default: 27.5 minutes)
 - **Screen Blur**: Blurs the entire screen after a configured period of time
 - **Philips Hue Integration**: Changes lights to red for visual notification
 - **Auto Recovery**: Automatically restores to normal state after 5 minutes

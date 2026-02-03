@@ -431,9 +431,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func pauseUsageTimerIfNeeded(at now: Date) {
-        guard !isUsagePaused, let lastActivity = lastActivityTime else { return }
+        guard let lastActivity = lastActivityTime else { return }
 
-        if now.timeIntervalSince(lastActivity) >= AppConstants.idleThreshold {
+        let idleTime = now.timeIntervalSince(lastActivity)
+        let resetThreshold = breakInterval * AppConstants.idleResetRatio
+
+        // If idle for half of break interval, reset the timer completely
+        if idleTime >= resetThreshold {
+            if !isUsagePaused || accumulatedUsageTime > 0 {
+                accumulatedUsageTime = 0
+                isUsagePaused = true
+                usageResumeTime = now
+                print("[AppDelegate] Idle for \(Int(idleTime))s (>= \(Int(resetThreshold))s), resetting usage timer")
+            }
+            return
+        }
+
+        // If idle for idleThreshold, pause the timer
+        if !isUsagePaused && idleTime >= AppConstants.idleThreshold {
             if let resumeTime = usageResumeTime {
                 accumulatedUsageTime += now.timeIntervalSince(resumeTime)
             }

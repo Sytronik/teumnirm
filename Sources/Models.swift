@@ -8,7 +8,8 @@ enum AppConstants {
     static let appNameKorean = "틈니름"
     static let defaultBreakInterval: TimeInterval = 55 * 60  // 55 minutes
     static let autoRestoreInterval: TimeInterval = 5 * 60  // 5 minutes
-    static let idleThreshold: TimeInterval = 3 * 60  // 3 minutes - idle time to treat as a break
+    static let idleThreshold: TimeInterval = 3 * 60  // 3 minutes - idle time to pause timer
+    static let idleResetRatio: Double = 0.5  // Reset timer if idle for this ratio of breakInterval
     static let maxBlurRadius: Int32 = 64
 }
 
