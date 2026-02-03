@@ -10,6 +10,11 @@ class HueController {
     var bridgeIP: String?
     var username: String?
     var targetLightIDs: [String] = []
+    var breakHue: Double = HueDefaults.breakHue
+    var breakSaturation: Double = HueDefaults.breakSaturation
+    var breakBrightness: Double = HueDefaults.breakBrightness
+    var breakColorTemperature: Double = HueDefaults.breakColorTemperature
+    var breakMode: HueBreakMode = HueDefaults.breakMode
 
     /// Stores original light states for restoration
     private var originalLightStates: [String: HueLightState] = [:]
@@ -170,8 +175,8 @@ class HueController {
 
     // MARK: - Break Time Actions
 
-    /// Save current light states and set lights to red for break time
-    func setLightsToRed() async throws {
+    /// Save current light states and set lights for break time
+    func setLightsToBreakColor() async throws {
         guard isConfigured else {
             print("[HueController] Not configured, skipping")
             return
@@ -180,34 +185,111 @@ class HueController {
         // Save current states
         originalLightStates.removeAll()
 
+        let lights = try await getLights()
+
         for lightID in targetLightIDs {
+            guard let light = lights[lightID] else {
+                print("[HueController] Light \(lightID) not found")
+                continue
+            }
+
+            originalLightStates[lightID] = light.state
+            print("[HueController] Saved state for light \(lightID)")
+
+            let breakState = makeBreakState(for: light)
             do {
-                let state = try await getLightState(lightID: lightID)
-                originalLightStates[lightID] = state
-                print("[HueController] Saved state for light \(lightID)")
+                try await setLightState(lightID: lightID, state: breakState)
+                print("[HueController] Set light \(lightID) for break time")
             } catch {
-                print("[HueController] Failed to save state for light \(lightID): \(error)")
+                print("[HueController] Failed to set light \(lightID) for break time: \(error)")
             }
         }
+    }
 
-        // Set to red
-        // Hue value 0 = red, sat 254 = full saturation, bri 254 = full brightness
-        let redState: [String: Any] = [
+    private func makeBreakState(for light: HueLight) -> [String: Any] {
+        var state: [String: Any] = [
             "on": true,
-            "hue": 0,  // Red
-            "sat": 254,  // Full saturation
-            "bri": 254,  // Full brightness
-            "transitiontime": 10,  // 1 second transition
+            "transitiontime": 10,
         ]
 
-        for lightID in targetLightIDs {
-            do {
-                try await setLightState(lightID: lightID, state: redState)
-                print("[HueController] Set light \(lightID) to red")
-            } catch {
-                print("[HueController] Failed to set light \(lightID) to red: \(error)")
+        switch breakMode {
+        case .color:
+            if supportsColor(light) {
+                state["hue"] = breakHueValue()
+                state["sat"] = breakSaturationValue()
+            } else if supportsColorTemperature(light) {
+                state["ct"] = breakColorTemperatureValue(for: light)
+            } else if supportsBrightness(light) {
+                state["bri"] = breakBrightnessValue()
+            }
+        case .colorTemperature:
+            if supportsColorTemperature(light) {
+                state["ct"] = breakColorTemperatureValue(for: light)
+            } else if supportsColor(light) {
+                state["hue"] = breakHueValue()
+                state["sat"] = breakSaturationValue()
+            } else if supportsBrightness(light) {
+                state["bri"] = breakBrightnessValue()
+            }
+        case .brightness:
+            if supportsBrightness(light) {
+                state["bri"] = breakBrightnessValue()
             }
         }
+
+        return state
+    }
+
+    private func supportsColor(_ light: HueLight) -> Bool {
+        if light.capabilities?.control?.colorgamuttype != nil {
+            return true
+        }
+
+        guard let type = light.type?.lowercased() else { return false }
+        if type.contains("color temperature") {
+            return false
+        }
+        return type.contains("extended color") || type.contains("color light")
+    }
+
+    private func supportsColorTemperature(_ light: HueLight) -> Bool {
+        if light.capabilities?.control?.ct != nil {
+            return true
+        }
+
+        guard let type = light.type?.lowercased() else { return false }
+        return type.contains("color temperature")
+    }
+
+    private func supportsBrightness(_ light: HueLight) -> Bool {
+        light.state.bri != nil
+    }
+
+    private func breakHueValue() -> Int {
+        let value = Int(round(breakHue * 65_535))
+        return clamp(value, min: 0, max: 65_535)
+    }
+
+    private func breakSaturationValue() -> Int {
+        let value = Int(round(breakSaturation * 254))
+        return clamp(value, min: 0, max: 254)
+    }
+
+    private func breakBrightnessValue() -> Int {
+        let value = Int(round(normalizedBreakBrightness(breakBrightness) * 254))
+        return clamp(value, min: 1, max: 254)
+    }
+
+    private func breakColorTemperatureValue(for light: HueLight) -> Int {
+        let defaultRange = HueDefaults.colorTemperatureRange
+        let minCt = light.capabilities?.control?.ct?.min ?? Int(defaultRange.lowerBound)
+        let maxCt = light.capabilities?.control?.ct?.max ?? Int(defaultRange.upperBound)
+        let value = Int(round(breakColorTemperature))
+        return clamp(value, min: minCt, max: maxCt)
+    }
+
+    private func clamp<T: Comparable>(_ value: T, min: T, max: T) -> T {
+        Swift.min(Swift.max(value, min), max)
     }
 
     /// Restore lights to their original state
@@ -271,6 +353,25 @@ class HueController {
         bridgeIP = defaults.string(forKey: SettingsKeys.hueBridgeIP)
         username = defaults.string(forKey: SettingsKeys.hueUsername)
         targetLightIDs = defaults.stringArray(forKey: SettingsKeys.hueLightIDs) ?? []
+        breakHue = defaults.object(forKey: SettingsKeys.hueBreakHue) == nil
+            ? HueDefaults.breakHue
+            : defaults.double(forKey: SettingsKeys.hueBreakHue)
+        breakSaturation = defaults.object(forKey: SettingsKeys.hueBreakSaturation) == nil
+            ? HueDefaults.breakSaturation
+            : defaults.double(forKey: SettingsKeys.hueBreakSaturation)
+        let storedBrightness = defaults.object(forKey: SettingsKeys.hueBreakBrightness) == nil
+            ? HueDefaults.breakBrightness
+            : defaults.double(forKey: SettingsKeys.hueBreakBrightness)
+        breakBrightness = normalizedBreakBrightness(storedBrightness)
+        breakColorTemperature = defaults.object(forKey: SettingsKeys.hueBreakColorTemperature) == nil
+            ? HueDefaults.breakColorTemperature
+            : defaults.double(forKey: SettingsKeys.hueBreakColorTemperature)
+        if let storedMode = defaults.string(forKey: SettingsKeys.hueBreakMode),
+           let mode = HueBreakMode(rawValue: storedMode) {
+            breakMode = mode
+        } else {
+            breakMode = HueDefaults.breakMode
+        }
     }
 
     /// Trigger local network permission dialog by attempting to access a local IP
@@ -302,6 +403,25 @@ class HueController {
         defaults.set(bridgeIP, forKey: SettingsKeys.hueBridgeIP)
         defaults.set(username, forKey: SettingsKeys.hueUsername)
         defaults.set(targetLightIDs, forKey: SettingsKeys.hueLightIDs)
+        defaults.set(breakHue, forKey: SettingsKeys.hueBreakHue)
+        defaults.set(breakSaturation, forKey: SettingsKeys.hueBreakSaturation)
+        defaults.set(normalizedBreakBrightness(breakBrightness), forKey: SettingsKeys.hueBreakBrightness)
+        defaults.set(breakColorTemperature, forKey: SettingsKeys.hueBreakColorTemperature)
+        defaults.set(breakMode.rawValue, forKey: SettingsKeys.hueBreakMode)
+    }
+
+    private func normalizedBreakBrightness(_ value: Double) -> Double {
+        let normalized: Double
+        if value > HueDefaults.brightnessRange.upperBound {
+            normalized = value / 254.0
+        } else {
+            normalized = value
+        }
+
+        return min(
+            max(normalized, HueDefaults.brightnessRange.lowerBound),
+            HueDefaults.brightnessRange.upperBound
+        )
     }
 
     /// Test connection to the bridge

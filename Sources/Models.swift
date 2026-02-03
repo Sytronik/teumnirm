@@ -13,6 +13,26 @@ enum AppConstants {
     static let maxBlurRadius: Int32 = 64
 }
 
+// MARK: - Hue Defaults
+
+enum HueDefaults {
+    static let breakHue: Double = 0.0
+    static let breakSaturation: Double = 1.0
+    static let breakBrightness: Double = 1.0
+    static let breakColorTemperature: Double = 370.0  // mired (~2700K)
+    static let colorTemperatureRange: ClosedRange<Double> = 153.0...500.0
+    static let brightnessRange: ClosedRange<Double> = 0.01...1.0
+    static let breakMode: HueBreakMode = .color
+}
+
+enum HueBreakMode: String, CaseIterable, Identifiable, Codable {
+    case color
+    case colorTemperature
+    case brightness
+
+    var id: String { rawValue }
+}
+
 // MARK: - Settings Keys
 
 enum SettingsKeys {
@@ -21,6 +41,11 @@ enum SettingsKeys {
     static let hueBridgeIP = "hueBridgeIP"
     static let hueUsername = "hueUsername"
     static let hueLightIDs = "hueLightIDs"
+    static let hueBreakHue = "hueBreakHue"
+    static let hueBreakSaturation = "hueBreakSaturation"
+    static let hueBreakBrightness = "hueBreakBrightness"
+    static let hueBreakColorTemperature = "hueBreakColorTemperature"
+    static let hueBreakMode = "hueBreakMode"
     static let isEnabled = "isEnabled"
     static let useCompatibilityMode = "useCompatibilityMode"
     static let localNetworkPermissionRequested = "localNetworkPermissionRequested"
@@ -60,6 +85,22 @@ struct HueLightState: Codable {
 struct HueLight: Codable {
     let name: String
     let state: HueLightState
+    let type: String?
+    let capabilities: HueLightCapabilities?
+}
+
+struct HueLightCapabilities: Codable {
+    let control: HueLightControlCapabilities?
+}
+
+struct HueLightControlCapabilities: Codable {
+    let ct: HueLightColorTemperatureRange?
+    let colorgamuttype: String?
+}
+
+struct HueLightColorTemperatureRange: Codable {
+    let min: Int?
+    let max: Int?
 }
 
 // MARK: - Hue Bridge Discovery Response

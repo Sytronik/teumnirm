@@ -24,7 +24,7 @@ class SettingsWindowController {
         let window = NSWindow(contentViewController: hostingController)
         window.title = L.Settings.windowTitle
         window.styleMask = [.titled, .closable]
-        window.setContentSize(NSSize(width: 450, height: 530))
+        window.setContentSize(NSSize(width: 450, height: 650))
         window.center()
         window.isReleasedWhenClosed = false
 
@@ -64,7 +64,7 @@ struct SettingsView: View {
                 }
         }
         .padding()
-        .frame(minWidth: 400, minHeight: 430)
+        .frame(minWidth: 400, minHeight: 500)
     }
 }
 
@@ -275,6 +275,95 @@ struct HueSettingsView: View {
                     }
                 }
 
+                Section {
+                    TabView(selection: $viewModel.breakMode) {
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Text(L.Hue.breakColor)
+                                Spacer()
+                                ColorWell(
+                                    color: Binding(
+                                        get: { viewModel.breakColor },
+                                        set: { newColor in
+                                            viewModel.setBreakColor(from: newColor)
+                                        }
+                                    )
+                                )
+                                .frame(width: 44, height: 24)
+                            }
+                        }
+                        .padding(.horizontal, 8)
+                        .tag(HueBreakMode.color)
+                        .tabItem { Text(L.Hue.breakModeColor) }
+
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Text(L.Hue.colorTemperature)
+                                Spacer()
+                                Text(L.Hue.kelvin(viewModel.breakColorTemperatureKelvin))
+                                    .foregroundColor(.secondary)
+                                    .monospacedDigit()
+                            }
+
+                            GradientSlider(
+                                value: Binding(
+                                    get: {
+                                        HueDefaults.colorTemperatureRange.upperBound
+                                            + HueDefaults.colorTemperatureRange.lowerBound
+                                            - viewModel.breakColorTemperature
+                                    },
+                                    set: { newValue in
+                                        viewModel.breakColorTemperature =
+                                            HueDefaults.colorTemperatureRange.upperBound
+                                            + HueDefaults.colorTemperatureRange.lowerBound
+                                            - newValue
+                                    }
+                                ),
+                                range: HueDefaults.colorTemperatureRange,
+                                step: 1,
+                                gradient: LinearGradient(
+                                    colors: [
+                                        Color(red: 1.0, green: 0.6, blue: 0.2),
+                                        Color(red: 0.6, green: 0.8, blue: 1.0),
+                                    ],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                        }
+                        .padding(.horizontal, 8)
+                        .tag(HueBreakMode.colorTemperature)
+                        .tabItem { Text(L.Hue.breakModeTemperature) }
+
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Text(L.Hue.brightness)
+                                Spacer()
+                                Text(L.Hue.brightnessPercent(viewModel.breakBrightnessPercent))
+                                    .foregroundColor(.secondary)
+                                    .monospacedDigit()
+                            }
+
+                            GradientSlider(
+                                value: $viewModel.breakBrightness,
+                                range: HueDefaults.brightnessRange,
+                                step: 0.01,
+                                gradient: LinearGradient(
+                                    colors: [.black, .white],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                        }
+                        .padding(.horizontal, 8)
+                        .tag(HueBreakMode.brightness)
+                        .tabItem { Text(L.Hue.breakModeBrightness) }
+                    }
+                    .frame(height: 100)
+                } header: {
+                    Text(L.Hue.breakLightSettings)
+                }
+
                 if let error = errorMessage {
                     Section {
                         Text(error)
@@ -455,6 +544,47 @@ class SettingsViewModel: ObservableObject {
         }
     }
 
+    @Published var breakMode: HueBreakMode {
+        didSet {
+            applyBreakSettings()
+        }
+    }
+
+    @Published var breakHue: Double {
+        didSet {
+            if !isUpdatingBreakColor {
+                applyBreakSettings()
+            }
+        }
+    }
+
+    @Published var breakSaturation: Double {
+        didSet {
+            if !isUpdatingBreakColor {
+                applyBreakSettings()
+            }
+        }
+    }
+
+    @Published var breakBrightness: Double {
+        didSet {
+            let normalized = Self.normalizedBreakBrightness(breakBrightness)
+            if normalized != breakBrightness {
+                breakBrightness = normalized
+                return
+            }
+            if !isUpdatingBreakColor {
+                applyBreakSettings()
+            }
+        }
+    }
+
+    @Published var breakColorTemperature: Double {
+        didSet {
+            applyBreakSettings()
+        }
+    }
+
     @Published var availableLights: [String: HueLight] = [:]
 
     // Properties used for status updates
@@ -462,6 +592,7 @@ class SettingsViewModel: ObservableObject {
     @Published var remainingTimeText: String?
 
     private var updateTimer: Timer?
+    private var isUpdatingBreakColor = false
 
     init(appDelegate: AppDelegate) {
         self.appDelegate = appDelegate
@@ -475,6 +606,30 @@ class SettingsViewModel: ObservableObject {
         self.hueBridgeIP = defaults.string(forKey: SettingsKeys.hueBridgeIP) ?? ""
         self.hueUsername = defaults.string(forKey: SettingsKeys.hueUsername) ?? ""
         self.selectedLightIDs = Set(defaults.stringArray(forKey: SettingsKeys.hueLightIDs) ?? [])
+        if let storedMode = defaults.string(forKey: SettingsKeys.hueBreakMode),
+            let mode = HueBreakMode(rawValue: storedMode)
+        {
+            self.breakMode = mode
+        } else {
+            self.breakMode = HueDefaults.breakMode
+        }
+        self.breakHue =
+            defaults.object(forKey: SettingsKeys.hueBreakHue) == nil
+            ? HueDefaults.breakHue
+            : defaults.double(forKey: SettingsKeys.hueBreakHue)
+        self.breakSaturation =
+            defaults.object(forKey: SettingsKeys.hueBreakSaturation) == nil
+            ? HueDefaults.breakSaturation
+            : defaults.double(forKey: SettingsKeys.hueBreakSaturation)
+        let storedBrightness =
+            defaults.object(forKey: SettingsKeys.hueBreakBrightness) == nil
+            ? HueDefaults.breakBrightness
+            : defaults.double(forKey: SettingsKeys.hueBreakBrightness)
+        self.breakBrightness = Self.normalizedBreakBrightness(storedBrightness)
+        self.breakColorTemperature =
+            defaults.object(forKey: SettingsKeys.hueBreakColorTemperature) == nil
+            ? HueDefaults.breakColorTemperature
+            : defaults.double(forKey: SettingsKeys.hueBreakColorTemperature)
 
         // Initial status update
         updateStatus()
@@ -527,6 +682,60 @@ class SettingsViewModel: ObservableObject {
         }
     }
 
+    var breakColor: NSColor {
+        NSColor(
+            calibratedHue: breakHue,
+            saturation: breakSaturation,
+            brightness: Self.normalizedBreakBrightness(breakBrightness),
+            alpha: 1.0
+        )
+    }
+
+    var breakColorTemperatureKelvin: Int {
+        let clamped = max(breakColorTemperature, 1)
+        return Int(1_000_000 / clamped)
+    }
+
+    var breakBrightnessPercent: Int {
+        Int(round(Self.normalizedBreakBrightness(breakBrightness) * 100))
+    }
+
+    func setBreakColor(from color: NSColor) {
+        guard let components = color.hueSaturationBrightness else { return }
+        let clampedHue = min(max(components.hue, 0), 1)
+        let clampedSaturation = min(max(components.saturation, 0), 1)
+        let clampedBrightness = Self.normalizedBreakBrightness(components.brightness)
+        isUpdatingBreakColor = true
+        breakHue = clampedHue
+        breakSaturation = clampedSaturation
+        breakBrightness = clampedBrightness
+        isUpdatingBreakColor = false
+        applyBreakSettings()
+    }
+
+    private func applyBreakSettings() {
+        appDelegate?.hueController.breakHue = breakHue
+        appDelegate?.hueController.breakSaturation = breakSaturation
+        appDelegate?.hueController.breakBrightness = Self.normalizedBreakBrightness(breakBrightness)
+        appDelegate?.hueController.breakColorTemperature = breakColorTemperature
+        appDelegate?.hueController.breakMode = breakMode
+        saveSettings()
+    }
+
+    private static func normalizedBreakBrightness(_ value: Double) -> Double {
+        let normalized: Double
+        if value > HueDefaults.brightnessRange.upperBound {
+            normalized = value / 254.0
+        } else {
+            normalized = value
+        }
+
+        return min(
+            max(normalized, HueDefaults.brightnessRange.lowerBound),
+            HueDefaults.brightnessRange.upperBound
+        )
+    }
+
     private func saveSettings() {
         let defaults = UserDefaults.standard
         defaults.set(breakIntervalMinutes * 60, forKey: SettingsKeys.breakInterval)
@@ -536,5 +745,124 @@ class SettingsViewModel: ObservableObject {
         defaults.set(hueBridgeIP, forKey: SettingsKeys.hueBridgeIP)
         defaults.set(hueUsername, forKey: SettingsKeys.hueUsername)
         defaults.set(Array(selectedLightIDs), forKey: SettingsKeys.hueLightIDs)
+        defaults.set(breakMode.rawValue, forKey: SettingsKeys.hueBreakMode)
+        defaults.set(breakHue, forKey: SettingsKeys.hueBreakHue)
+        defaults.set(breakSaturation, forKey: SettingsKeys.hueBreakSaturation)
+        defaults.set(breakBrightness, forKey: SettingsKeys.hueBreakBrightness)
+        defaults.set(breakColorTemperature, forKey: SettingsKeys.hueBreakColorTemperature)
+    }
+}
+
+// MARK: - Color Well
+
+struct ColorWell: NSViewRepresentable {
+    @Binding var color: NSColor
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(color: $color)
+    }
+
+    func makeNSView(context: Context) -> NSColorWell {
+        let colorWell = NSColorWell()
+        colorWell.color = color
+        colorWell.target = context.coordinator
+        colorWell.action = #selector(Coordinator.colorDidChange(_:))
+        return colorWell
+    }
+
+    func updateNSView(_ nsView: NSColorWell, context: Context) {
+        if nsView.color != color {
+            nsView.color = color
+        }
+    }
+
+    class Coordinator: NSObject {
+        private var color: Binding<NSColor>
+
+        init(color: Binding<NSColor>) {
+            self.color = color
+        }
+
+        @objc func colorDidChange(_ sender: NSColorWell) {
+            color.wrappedValue = sender.color
+        }
+    }
+}
+
+// MARK: - Gradient Slider
+
+struct GradientSlider: View {
+    @Binding var value: Double
+    let range: ClosedRange<Double>
+    let step: Double
+    let gradient: LinearGradient
+
+    private let trackHeight: CGFloat = 8
+    private let thumbSize: CGFloat = 14
+
+    var body: some View {
+        GeometryReader { geometry in
+            let width = geometry.size.width
+            let availableWidth = max(1, width - thumbSize)
+            let clampedValue = min(max(value, range.lowerBound), range.upperBound)
+            let progress = (clampedValue - range.lowerBound) / (range.upperBound - range.lowerBound)
+            let xOffset = CGFloat(progress) * availableWidth
+
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: trackHeight / 2)
+                    .fill(gradient)
+                    .frame(height: trackHeight)
+
+                Circle()
+                    .fill(Color.white)
+                    .overlay(
+                        Circle()
+                            .stroke(Color.black.opacity(0.2), lineWidth: 1)
+                    )
+                    .frame(width: thumbSize, height: thumbSize)
+                    .offset(x: xOffset)
+                    .shadow(radius: 1)
+            }
+            .frame(height: max(trackHeight, thumbSize))
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { gesture in
+                        let location = min(
+                            max(0, gesture.location.x - thumbSize / 2), availableWidth)
+                        let ratio = Double(location / availableWidth)
+                        var newValue =
+                            range.lowerBound
+                            + ratio * (range.upperBound - range.lowerBound)
+                        newValue = (newValue / step).rounded() * step
+                        value = min(max(newValue, range.lowerBound), range.upperBound)
+                    }
+            )
+        }
+        .frame(height: 20)
+    }
+}
+
+// MARK: - NSColor Helpers
+
+extension NSColor {
+    fileprivate struct HueSaturationBrightness {
+        let hue: Double
+        let saturation: Double
+        let brightness: Double
+    }
+
+    fileprivate var hueSaturationBrightness: HueSaturationBrightness? {
+        guard let rgb = usingColorSpace(.deviceRGB) else { return nil }
+        var hue: CGFloat = 0
+        var saturation: CGFloat = 0
+        var brightness: CGFloat = 0
+        var alpha: CGFloat = 0
+        rgb.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
+        return HueSaturationBrightness(
+            hue: Double(hue),
+            saturation: Double(saturation),
+            brightness: Double(brightness)
+        )
     }
 }

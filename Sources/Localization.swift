@@ -279,6 +279,46 @@ enum L {
         static var requestingPermission: String {
             isKorean ? "권한 요청 중..." : "Requesting permission..."
         }
+
+        static var breakLightSettings: String {
+            isKorean ? "휴식시간 조명 설정" : "Break Time Lighting"
+        }
+
+        static var breakMode: String {
+            isKorean ? "모드" : "Mode"
+        }
+
+        static var breakModeColor: String {
+            isKorean ? "색상" : "Color"
+        }
+
+        static var breakModeTemperature: String {
+            isKorean ? "색온도" : "Color Temp"
+        }
+
+        static var breakModeBrightness: String {
+            isKorean ? "밝기" : "Brightness"
+        }
+
+        static var breakColor: String {
+            isKorean ? "휴식 색상" : "Break Color"
+        }
+
+        static var colorTemperature: String {
+            isKorean ? "색온도" : "Color Temperature"
+        }
+
+        static func kelvin(_ value: Int) -> String {
+            "\(value)K"
+        }
+
+        static var brightness: String {
+            isKorean ? "밝기" : "Brightness"
+        }
+
+        static func brightnessPercent(_ value: Int) -> String {
+            "\(value)%"
+        }
     }
 
     // MARK: - Welcome Window
@@ -292,7 +332,8 @@ enum L {
             if isKorean {
                 return "틈니름은 메뉴바 앱입니다.\n화면 상단의 타이머 아이콘을 클릭하여\n설정을 변경하거나 상태를 확인하세요."
             } else {
-                return "Teumnirm runs in the menu bar.\nClick the timer icon at the top of your screen\nto change settings or check status."
+                return
+                    "Teumnirm runs in the menu bar.\nClick the timer icon at the top of your screen\nto change settings or check status."
             }
         }
 

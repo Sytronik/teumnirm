@@ -304,10 +304,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Show confirm window
         confirmWindowController.showWindow()
 
-        // Set Hue lights to red
+        // Set Hue lights for break time
         if hueEnabled && hueController.isConfigured {
             Task {
-                try? await hueController.setLightsToRed()
+                try? await hueController.setLightsToBreakColor()
             }
         }
 
