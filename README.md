@@ -48,6 +48,7 @@ xattr -cr ~/Downloads/Teumnirm.app
 ### Basic Usage
 
 1. When you launch the app, a timer icon appears in the menu bar
+
     ![Screenshot](assets/app_menu_en.png)
 2. The app automatically monitors keyboard/mouse activity
 3. After 55 minutes (default) of continuous use, the screen becomes blurred
