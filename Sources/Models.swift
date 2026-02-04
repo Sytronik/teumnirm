@@ -13,6 +13,21 @@ enum AppConstants {
     static let maxBlurRadius: Int32 = 64
 }
 
+// MARK: - Timer Settings
+
+enum TimerSettings {
+    static let breakIntervalMinutesRange: ClosedRange<Int> = 20...120
+    static let breakIntervalMinutesStep = 5
+    static let breakIntervalMinutesOptions: [Int] = Array(
+        stride(
+            from: breakIntervalMinutesRange.lowerBound,
+            through: breakIntervalMinutesRange.upperBound,
+            by: breakIntervalMinutesStep
+        )
+    )
+    static let autoRestoreMinutesOptions: [Int] = [3, 5, 10, 15]
+}
+
 // MARK: - Hue Defaults
 
 enum HueDefaults {

@@ -80,7 +80,7 @@ struct GeneralSettingsView: View {
                     Text(L.Settings.breakInterval)
                     Spacer()
                     Picker("", selection: $viewModel.breakIntervalMinutes) {
-                        ForEach(Array(stride(from: 20, through: 120, by: 5)), id: \.self) {
+                        ForEach(TimerSettings.breakIntervalMinutesOptions, id: \.self) {
                             minutes in
                             Text(L.Settings.minutes(minutes)).tag(minutes)
                         }
@@ -93,10 +93,9 @@ struct GeneralSettingsView: View {
                     Text(L.Settings.autoRestoreTime)
                     Spacer()
                     Picker("", selection: $viewModel.autoRestoreMinutes) {
-                        Text(L.Settings.minutes(3)).tag(3)
-                        Text(L.Settings.minutes(5)).tag(5)
-                        Text(L.Settings.minutes(10)).tag(10)
-                        Text(L.Settings.minutes(15)).tag(15)
+                        ForEach(TimerSettings.autoRestoreMinutesOptions, id: \.self) { minutes in
+                            Text(L.Settings.minutes(minutes)).tag(minutes)
+                        }
                     }
                     .pickerStyle(.menu)
                     .frame(width: 100)
