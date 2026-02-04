@@ -149,6 +149,7 @@ struct HueSettingsView: View {
     @State private var isDiscovering = false
     @State private var isRegistering = false
     @State private var errorMessage: String?
+    @State private var loadLightsErrorMessage: String?
     @State private var showLinkButtonAlert = false
     @State private var showLocalNetworkPermissionAlert = false
     @State private var isRequestingPermission = false
@@ -238,6 +239,7 @@ struct HueSettingsView: View {
                             Button(L.Hue.disconnect) {
                                 viewModel.hueUsername = ""
                                 viewModel.selectedLightIDs.removeAll()
+                                loadLightsErrorMessage = nil
                             }
                             .foregroundColor(.red)
                         }
@@ -269,6 +271,11 @@ struct HueSettingsView: View {
                                         }
                                     ))
                             }
+                        }
+
+                        if let loadLightsErrorMessage {
+                            Text(loadLightsErrorMessage)
+                                .foregroundColor(.red)
                         }
                     } header: {
                         Text(L.Hue.lightsToControl)
@@ -465,6 +472,7 @@ struct HueSettingsView: View {
     private func loadLights() {
         guard let appDelegate = viewModel.appDelegate else { return }
 
+        loadLightsErrorMessage = nil
         appDelegate.hueController.bridgeIP = viewModel.hueBridgeIP
         appDelegate.hueController.username = viewModel.hueUsername
 
@@ -473,10 +481,11 @@ struct HueSettingsView: View {
                 let lights = try await appDelegate.hueController.getLights()
                 await MainActor.run {
                     viewModel.availableLights = lights
+                    loadLightsErrorMessage = nil
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = L.Hue.couldNotLoadLights(error.localizedDescription)
+                    loadLightsErrorMessage = L.Hue.couldNotLoadLights(error.localizedDescription)
                 }
             }
         }
