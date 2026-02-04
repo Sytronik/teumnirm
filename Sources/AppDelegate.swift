@@ -538,17 +538,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 ? L.Menu.statusPendingForMicrophone : L.Menu.statusMonitoring
             enabledMenuItem.state = .on
             confirmMenuItem.isHidden = true
+            timerMenuItem.isHidden = false
 
         case .breakTime:
             statusMenuItem.title = L.Menu.statusBreakTime
             enabledMenuItem.state = .on
             confirmMenuItem.isHidden = false
+            timerMenuItem.isHidden = false
             timerMenuItem.title = ""
 
         case .paused:
             statusMenuItem.title = L.Menu.statusPaused
             enabledMenuItem.state = .off
             confirmMenuItem.isHidden = true
+            timerMenuItem.isHidden = true
             timerMenuItem.title = ""
         }
 
