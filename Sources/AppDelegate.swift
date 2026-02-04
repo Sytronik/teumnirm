@@ -280,11 +280,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Start activity monitor
         if !activityMonitor!.startMonitoring() {
             print("[AppDelegate] Failed to start activity monitor")
-            // Request permission only when it's not granted
-            if !CGEventActivityMonitor.checkInputMonitoringPermission() {
-                print("[AppDelegate] Requesting input monitoring permission")
-                CGEventActivityMonitor.requestInputMonitoringPermission()
-            }
         }
 
         // Start usage timer
@@ -376,7 +371,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func updateTimerDisplay() {
         guard state == .monitoring,
-              let remaining = remainingBreakTime()
+            let remaining = remainingBreakTime()
         else {
             timerMenuItem.title = ""
             updateMenuBarTimerDisplay()
@@ -442,7 +437,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 accumulatedUsageTime = 0
                 isUsagePaused = true
                 usageResumeTime = now
-                print("[AppDelegate] Idle for \(Int(idleTime))s (>= \(Int(resetThreshold))s), resetting usage timer")
+                print(
+                    "[AppDelegate] Idle for \(Int(idleTime))s (>= \(Int(resetThreshold))s), resetting usage timer"
+                )
             }
             return
         }

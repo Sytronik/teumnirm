@@ -134,6 +134,12 @@ class CGEventActivityMonitor {
     func startMonitoring() -> Bool {
         guard !isMonitoring else { return true }
 
+        if !Self.checkInputMonitoringPermission() {
+            print("[CGEventActivityMonitor] Input monitoring permission not granted")
+            Self.requestInputMonitoringPermission()
+            return false
+        }
+
         // Events to monitor
         let eventMask: CGEventMask =
             ((1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.keyUp.rawValue)
@@ -143,9 +149,17 @@ class CGEventActivityMonitor {
                 | (1 << CGEventType.rightMouseUp.rawValue) | (1 << CGEventType.scrollWheel.rawValue))
 
         // Create event tap
-        let callback: CGEventTapCallBack = { _, _, event, refcon in
+        let callback: CGEventTapCallBack = { _, type, event, refcon in
             guard let refcon = refcon else { return Unmanaged.passUnretained(event) }
             let monitor = Unmanaged<CGEventActivityMonitor>.fromOpaque(refcon).takeUnretainedValue()
+
+            if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+                if let tap = monitor.eventTap {
+                    CGEvent.tapEnable(tap: tap, enable: true)
+                }
+                return Unmanaged.passUnretained(event)
+            }
+
             monitor.handleEvent()
             return Unmanaged.passUnretained(event)
         }
@@ -218,16 +232,15 @@ class CGEventActivityMonitor {
     // MARK: - Permission Check
 
     static func checkInputMonitoringPermission() -> Bool {
-        let trusted = AXIsProcessTrusted()
-        if !trusted {
-            print("[CGEventActivityMonitor] Input monitoring permission not granted")
+        if #available(macOS 10.15, *) {
+            return CGPreflightListenEventAccess()
         }
-        return trusted
+        return true
     }
 
     static func requestInputMonitoringPermission() {
-        let options =
-            [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-        AXIsProcessTrustedWithOptions(options)
+        if #available(macOS 10.15, *) {
+            _ = CGRequestListenEventAccess()
+        }
     }
 }

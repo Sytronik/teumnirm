@@ -87,7 +87,9 @@ class WelcomeWindowController: NSObject, NSWindowDelegate {
         contentView.addSubview(hintLabel)
 
         // Got it button
-        let button = NSButton(title: L.Welcome.gotIt, target: self, action: #selector(dismissButtonClicked))
+        let button = NSButton(
+            title: L.Welcome.gotIt, target: self, action: #selector(dismissButtonClicked)
+        )
         button.bezelStyle = .rounded
         button.font = NSFont.systemFont(ofSize: 14, weight: .medium)
         button.frame = NSRect(x: (windowWidth - 100) / 2, y: 10, width: 100, height: 30)
