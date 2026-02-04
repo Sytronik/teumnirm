@@ -101,6 +101,11 @@ struct GeneralSettingsView: View {
                     .pickerStyle(.menu)
                     .frame(width: 100)
                 }
+
+                Toggle(
+                    L.Settings.deferBreakWhileMicrophoneInUse,
+                    isOn: $viewModel.deferBreakWhileMicrophoneInUse
+                )
             } header: {
                 Text(L.Settings.timerSettings)
             }
@@ -511,6 +516,13 @@ class SettingsViewModel: ObservableObject {
         }
     }
 
+    @Published var deferBreakWhileMicrophoneInUse: Bool {
+        didSet {
+            appDelegate?.deferBreakWhileMicrophoneInUse = deferBreakWhileMicrophoneInUse
+            saveSettings()
+        }
+    }
+
     @Published var useCompatibilityMode: Bool {
         didSet {
             appDelegate?.blurOverlayManager.setCompatibilityMode(useCompatibilityMode)
@@ -609,6 +621,7 @@ class SettingsViewModel: ObservableObject {
         let defaults = UserDefaults.standard
         self.breakIntervalMinutes = Int(appDelegate.breakInterval / 60)
         self.autoRestoreMinutes = Int(appDelegate.autoRestoreInterval / 60)
+        self.deferBreakWhileMicrophoneInUse = appDelegate.deferBreakWhileMicrophoneInUse
         self.useCompatibilityMode = defaults.bool(forKey: SettingsKeys.useCompatibilityMode)
         self.showTimerInMenuBar = defaults.bool(forKey: SettingsKeys.showTimerInMenuBar)
         self.hueEnabled = defaults.bool(forKey: SettingsKeys.hueEnabled)
@@ -671,7 +684,9 @@ class SettingsViewModel: ObservableObject {
         // Update status text
         switch appDelegate.state {
         case .monitoring:
-            statusText = L.Settings.statusMonitoring
+            statusText =
+                appDelegate.isBreakDeferredForMicrophone
+                ? L.Settings.statusPendingForMicrophone : L.Settings.statusMonitoring
         case .breakTime:
             statusText = L.Settings.statusBreakTime
         case .paused:
@@ -680,6 +695,7 @@ class SettingsViewModel: ObservableObject {
 
         // Update remaining time (reflect pause during idle)
         if appDelegate.state == .monitoring,
+            !appDelegate.isBreakDeferredForMicrophone,
             let remaining = appDelegate.remainingBreakTime()
         {
 
@@ -748,6 +764,10 @@ class SettingsViewModel: ObservableObject {
     private func saveSettings() {
         let defaults = UserDefaults.standard
         defaults.set(breakIntervalMinutes * 60, forKey: SettingsKeys.breakInterval)
+        defaults.set(
+            deferBreakWhileMicrophoneInUse,
+            forKey: SettingsKeys.deferBreakWhileMicrophoneInUse
+        )
         defaults.set(useCompatibilityMode, forKey: SettingsKeys.useCompatibilityMode)
         defaults.set(showTimerInMenuBar, forKey: SettingsKeys.showTimerInMenuBar)
         defaults.set(hueEnabled, forKey: SettingsKeys.hueEnabled)

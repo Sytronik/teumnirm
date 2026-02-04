@@ -18,6 +18,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     let blurOverlayManager = BlurOverlayManager()
     let hueController = HueController()
+    private let microphoneUsageDetector = MicrophoneUsageDetector()
     private var activityMonitor: CGEventActivityMonitor?
     private var confirmWindowController = ConfirmWindowController()
     private var settingsWindowController = SettingsWindowController()
@@ -43,7 +44,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var accumulatedUsageTime: TimeInterval = 0
     private var usageResumeTime: Date?
     private var isUsagePaused = false
+    private var pendingBreakDueToMicrophone = false {
+        didSet {
+            guard pendingBreakDueToMicrophone != oldValue else { return }
+            updateUI()
+        }
+    }
     var lastActivityTime: Date?  // Last activity time (used for idle detection)
+    var isBreakDeferredForMicrophone: Bool {
+        state == .monitoring && pendingBreakDueToMicrophone
+    }
 
     // MARK: - Settings
 
@@ -69,6 +79,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         didSet {
             UserDefaults.standard.set(showTimerInMenuBar, forKey: SettingsKeys.showTimerInMenuBar)
             updateMenuBarTimerDisplay()
+        }
+    }
+
+    var deferBreakWhileMicrophoneInUse: Bool = false {
+        didSet {
+            UserDefaults.standard.set(
+                deferBreakWhileMicrophoneInUse,
+                forKey: SettingsKeys.deferBreakWhileMicrophoneInUse
+            )
+
+            if !deferBreakWhileMicrophoneInUse {
+                pendingBreakDueToMicrophone = false
+            }
         }
     }
 
@@ -246,6 +269,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         hueEnabled = defaults.bool(forKey: SettingsKeys.hueEnabled)
         showTimerInMenuBar = defaults.bool(forKey: SettingsKeys.showTimerInMenuBar)
+        deferBreakWhileMicrophoneInUse = defaults.bool(
+            forKey: SettingsKeys.deferBreakWhileMicrophoneInUse)
 
         hueController.loadFromDefaults()
 
@@ -275,6 +300,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         accumulatedUsageTime = 0
         usageResumeTime = now
         isUsagePaused = false
+        pendingBreakDueToMicrophone = false
         lastActivityTime = now
 
         // Start activity monitor
@@ -364,15 +390,50 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         guard let elapsed = currentUsageElapsedTime(at: now) else { return }
 
-        if elapsed >= breakInterval {
-            state = .breakTime
+        if elapsed < breakInterval {
+            pendingBreakDueToMicrophone = false
+            return
         }
+
+        if shouldDeferBreakForMicrophone() {
+            if !pendingBreakDueToMicrophone {
+                pendingBreakDueToMicrophone = true
+                print("[AppDelegate] Break deferred while microphone is in use")
+            }
+            return
+        }
+
+        if pendingBreakDueToMicrophone {
+            print("[AppDelegate] Microphone released, starting deferred break")
+        }
+
+        pendingBreakDueToMicrophone = false
+        state = .breakTime
+    }
+
+    private func shouldDeferBreakForMicrophone() -> Bool {
+        guard deferBreakWhileMicrophoneInUse else { return false }
+        return microphoneUsageDetector.isMicrophoneInUse()
     }
 
     private func updateTimerDisplay() {
-        guard state == .monitoring,
-            let remaining = remainingBreakTime()
-        else {
+        guard state == .monitoring else {
+            timerMenuItem.title = ""
+            updateMenuBarTimerDisplay()
+            return
+        }
+
+        if pendingBreakDueToMicrophone {
+            timerMenuItem.title = L.Menu.breakPendingForMicrophone
+            if showTimerInMenuBar {
+                updateMenuBarTimerDisplay(minutes: 0, seconds: 0)
+            } else {
+                updateMenuBarTimerDisplay()
+            }
+            return
+        }
+
+        guard let remaining = remainingBreakTime() else {
             timerMenuItem.title = ""
             updateMenuBarTimerDisplay()
             return
@@ -472,7 +533,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func updateUI() {
         switch state {
         case .monitoring:
-            statusMenuItem.title = L.Menu.statusMonitoring
+            statusMenuItem.title =
+                pendingBreakDueToMicrophone
+                ? L.Menu.statusPendingForMicrophone : L.Menu.statusMonitoring
             enabledMenuItem.state = .on
             confirmMenuItem.isHidden = true
 
@@ -514,6 +577,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             accumulatedUsageTime = 0
             usageResumeTime = now
             isUsagePaused = false
+            pendingBreakDueToMicrophone = false
             lastActivityTime = now
             print("[AppDelegate] Timer reset")
         }

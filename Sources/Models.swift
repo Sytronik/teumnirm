@@ -51,6 +51,7 @@ enum SettingsKeys {
     static let localNetworkPermissionRequested = "localNetworkPermissionRequested"
     static let hasShownWelcome = "hasShownWelcome"
     static let showTimerInMenuBar = "showTimerInMenuBar"
+    static let deferBreakWhileMicrophoneInUse = "deferBreakWhileMicrophoneInUse"
 }
 
 // MARK: - App State

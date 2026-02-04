@@ -14,6 +14,7 @@ Teumnirm detects keyboard/mouse activity and blurs the screen after 55 minutes o
 
 - **Activity Monitoring**: Tracks computer usage time by detecting keyboard/mouse input
 - **Inactivity Detection**: Pauses the timer after 3 minutes of inactivity, and completely resets the timer if inactive for half of the break interval (default: 27.5 minutes)
+- **Meeting-safe Break Deferral**: Optionally delays break alerts while your microphone is in use and shows the alert immediately after mic use ends
 - **Screen Blur**: Blurs the entire screen after a configured period of time
 - **Philips Hue Integration**: Changes lights to red for visual notification
 - **Auto Recovery**: Automatically restores to normal state after 5 minutes
@@ -52,6 +53,12 @@ xattr -cr ~/Downloads/Teumnirm.app
 3. After 55 minutes (default) of continuous use, the screen becomes blurred
 4. Click the "Break Complete" button after your break, or it will auto-dismiss after 5 minutes
 
+### During Meetings/Calls
+
+1. Open menu bar icon > **Settings...** > **General**
+2. Enable **Delay break alert while microphone is in use**
+3. If break time is reached while your mic is active, the break alert is deferred and shown immediately after the mic is released
+
 ### Permissions
 
 #### Input Monitoring
@@ -78,6 +85,7 @@ Local network access permission is required to communicate with the Hue bridge.
 
 - **Break Reminder Interval**: 20 to 120 minutes (default: 55 minutes)
 - **Auto Dismiss Time**: 3 to 15 minutes (default: 5 minutes)
+- **Delay Break Alert While Microphone Is In Use**: Useful for meetings; this is based on mic usage (not Zoom-only integration)
 - **Compatibility Mode**: Enable if the blur is not displaying properly
 
 ## Privacy

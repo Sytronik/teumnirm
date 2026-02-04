@@ -41,6 +41,10 @@ enum L {
             isKorean ? "상태: 모니터링 중" : "Status: Monitoring"
         }
 
+        static var statusPendingForMicrophone: String {
+            isKorean ? "상태: 마이크 사용 종료 대기 중" : "Status: Waiting for microphone to be released"
+        }
+
         static var statusBreakTime: String {
             isKorean ? "상태: 휴식 시간" : "Status: Break Time"
         }
@@ -55,6 +59,10 @@ enum L {
             } else {
                 return String(format: "Next break in: %d:%02d", minutes, seconds)
             }
+        }
+
+        static var breakPendingForMicrophone: String {
+            isKorean ? "마이크 사용 중이라 휴식 알림 대기 중" : "Break is waiting while microphone is in use"
         }
     }
 
@@ -105,6 +113,10 @@ enum L {
             isKorean ? "자동 해제 시간" : "Auto-dismiss Time"
         }
 
+        static var deferBreakWhileMicrophoneInUse: String {
+            isKorean ? "마이크 사용 중에는 휴식 알림 미루기" : "Delay break alert while microphone is in use"
+        }
+
         static var timerSettings: String {
             isKorean ? "타이머 설정" : "Timer Settings"
         }
@@ -146,6 +158,10 @@ enum L {
 
         static var statusMonitoring: String {
             isKorean ? "모니터링 중" : "Monitoring"
+        }
+
+        static var statusPendingForMicrophone: String {
+            isKorean ? "마이크 사용 종료 대기 중" : "Waiting for microphone to be released"
         }
 
         static var statusBreakTime: String {
