@@ -13,6 +13,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var confirmMenuItem: NSMenuItem!
     private var timerMenuItem: NSMenuItem!
     private var statusPopover: NSPopover?
+    private let monitoringStatusImage = AppDelegate.makeTemplateSymbolImage(
+        systemName: "timer",
+        accessibilityDescription: "Monitoring"
+    )
+    private let breakStatusImage = AppDelegate.makeTemplateSymbolImage(
+        systemName: "pause.circle.fill",
+        accessibilityDescription: "Break Time"
+    )
+    private let pausedStatusImage = AppDelegate.makeTemplateSymbolImage(
+        systemName: "pause.circle",
+        accessibilityDescription: "Paused"
+    )
 
     // MARK: - Managers
 
@@ -126,8 +138,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "timer", accessibilityDescription: "Teumnirm")
-            button.image?.isTemplate = true
+            button.image = monitoringStatusImage
         }
 
         let menu = NSMenu()
@@ -450,23 +461,32 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let statusItem = statusItem, let button = statusItem.button else { return }
 
         if showTimerInMenuBar, let minutes = minutes, let seconds = seconds {
-            button.title = String(format: "%d:%02d", minutes, seconds)
-            button.image = nil
+            let newTitle = String(format: "%d:%02d", minutes, seconds)
+            if button.title != newTitle {
+                button.title = newTitle
+            }
+            if button.image != nil {
+                button.image = nil
+            }
         } else {
-            button.title = ""
+            if !button.title.isEmpty {
+                button.title = ""
+            }
+
+            let statusImage: NSImage?
             // Restore icon based on current state
             switch state {
             case .monitoring:
-                button.image = NSImage(
-                    systemSymbolName: "timer", accessibilityDescription: "Monitoring")
+                statusImage = monitoringStatusImage
             case .breakTime:
-                button.image = NSImage(
-                    systemSymbolName: "pause.circle.fill", accessibilityDescription: "Break Time")
+                statusImage = breakStatusImage
             case .paused:
-                button.image = NSImage(
-                    systemSymbolName: "pause.circle", accessibilityDescription: "Paused")
+                statusImage = pausedStatusImage
             }
-            button.image?.isTemplate = true
+
+            if button.image !== statusImage {
+                button.image = statusImage
+            }
         }
     }
 
@@ -614,5 +634,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         NSApplication.shared.terminate(nil)
+    }
+
+    private static func makeTemplateSymbolImage(
+        systemName: String,
+        accessibilityDescription: String
+    ) -> NSImage? {
+        let image = NSImage(
+            systemSymbolName: systemName,
+            accessibilityDescription: accessibilityDescription
+        )
+        image?.isTemplate = true
+        return image
     }
 }
