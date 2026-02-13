@@ -224,9 +224,9 @@ class CGEventActivityMonitor {
 
         lastActivityTime = now
 
-        DispatchQueue.main.async { [weak self] in
-            self?.onActivity?()
-        }
+        // Callback is already on the main thread (run loop source is on main run loop),
+        // so call directly to avoid closure allocation overhead.
+        onActivity?()
     }
 
     // MARK: - Permission Check

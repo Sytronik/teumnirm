@@ -376,7 +376,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func startUsageTimer() {
         usageTimer?.invalidate()
         let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
-            self?.checkUsageTime()
+            autoreleasepool {
+                self?.checkUsageTime()
+            }
         }
         // Add to .common mode so the timer runs while the menu is open
         RunLoop.main.add(timer, forMode: .common)
@@ -386,7 +388,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func startTimerUpdateTimer() {
         timerUpdateTimer?.invalidate()
         let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
-            self?.updateTimerDisplay()
+            autoreleasepool {
+                self?.updateTimerDisplay()
+            }
         }
         // Add to .common mode so the timer runs while the menu is open
         RunLoop.main.add(timer, forMode: .common)
@@ -429,13 +433,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func updateTimerDisplay() {
         guard state == .monitoring else {
-            timerMenuItem.title = ""
+            if !timerMenuItem.title.isEmpty {
+                timerMenuItem.title = ""
+            }
             updateMenuBarTimerDisplay()
             return
         }
 
         if pendingBreakDueToMicrophone {
-            timerMenuItem.title = L.Menu.breakPendingForMicrophone
+            let newTitle = L.Menu.breakPendingForMicrophone
+            if timerMenuItem.title != newTitle {
+                timerMenuItem.title = newTitle
+            }
             if showTimerInMenuBar {
                 updateMenuBarTimerDisplay(minutes: 0, seconds: 0)
             } else {
@@ -445,7 +454,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         guard let remaining = remainingBreakTime() else {
-            timerMenuItem.title = ""
+            if !timerMenuItem.title.isEmpty {
+                timerMenuItem.title = ""
+            }
             updateMenuBarTimerDisplay()
             return
         }
@@ -453,7 +464,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let minutes = Int(remaining) / 60
         let seconds = Int(remaining) % 60
 
-        timerMenuItem.title = L.Menu.nextBreakIn(minutes: minutes, seconds: seconds)
+        let newTitle = L.Menu.nextBreakIn(minutes: minutes, seconds: seconds)
+        if timerMenuItem.title != newTitle {
+            timerMenuItem.title = newTitle
+        }
         updateMenuBarTimerDisplay(minutes: minutes, seconds: seconds)
     }
 

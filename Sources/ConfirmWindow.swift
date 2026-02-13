@@ -161,7 +161,9 @@ class ConfirmWindowController {
             withTimeInterval: 1.0,
             repeats: true
         ) { [weak self] _ in
-            self?.updateCountdown()
+            autoreleasepool {
+                self?.updateCountdown()
+            }
         }
     }
 
