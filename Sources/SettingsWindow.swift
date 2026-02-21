@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - Settings Window Controller
 
-class SettingsWindowController {
+class SettingsWindowController: NSObject, NSWindowDelegate {
     private var window: NSWindow?
     private var hostingController: NSHostingController<SettingsView>?
 
@@ -27,6 +27,7 @@ class SettingsWindowController {
         window.setContentSize(NSSize(width: 450, height: 650))
         window.center()
         window.isReleasedWhenClosed = false
+        window.delegate = self
 
         self.window = window
         self.hostingController = hostingController
@@ -37,6 +38,9 @@ class SettingsWindowController {
 
     func closeSettings() {
         window?.close()
+    }
+
+    func windowWillClose(_ notification: Notification) {
         window = nil
         hostingController = nil
     }
@@ -45,10 +49,10 @@ class SettingsWindowController {
 // MARK: - Settings View
 
 struct SettingsView: View {
-    @ObservedObject var viewModel: SettingsViewModel
+    @StateObject var viewModel: SettingsViewModel
 
     init(appDelegate: AppDelegate) {
-        self.viewModel = SettingsViewModel(appDelegate: appDelegate)
+        _viewModel = StateObject(wrappedValue: SettingsViewModel(appDelegate: appDelegate))
     }
 
     var body: some View {
@@ -665,7 +669,9 @@ class SettingsViewModel: ObservableObject {
 
     private func startUpdateTimer() {
         updateTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            self?.updateStatus()
+            autoreleasepool {
+                self?.updateStatus()
+            }
         }
         // Add to .common mode so the timer runs during UI interaction
         if let timer = updateTimer {

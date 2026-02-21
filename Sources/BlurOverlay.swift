@@ -29,6 +29,8 @@ class BlurOverlayManager {
     private var useCompatibilityMode = false
 
     private var animationTimer: Timer?
+    private var displayChangeCallback: CGDisplayReconfigurationCallBack?
+    private var displayChangeUserInfo: UnsafeMutableRawPointer?
 
     /// Callback when blur animation completes (reaches target)
     var onBlurComplete: (() -> Void)?
@@ -36,6 +38,9 @@ class BlurOverlayManager {
     init() {}
 
     deinit {
+        if let callback = displayChangeCallback {
+            CGDisplayRemoveReconfigurationCallback(callback, displayChangeUserInfo)
+        }
         animationTimer?.invalidate()
         removeOverlayWindows()
     }
@@ -212,6 +217,8 @@ class BlurOverlayManager {
         }
 
         let userInfo = Unmanaged.passUnretained(self).toOpaque()
+        displayChangeCallback = callback
+        displayChangeUserInfo = userInfo
         CGDisplayRegisterReconfigurationCallback(callback, userInfo)
     }
 }

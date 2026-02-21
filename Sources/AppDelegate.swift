@@ -13,6 +13,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var confirmMenuItem: NSMenuItem!
     private var timerMenuItem: NSMenuItem!
     private var statusPopover: NSPopover?
+    private let monitoringStatusImage = AppDelegate.makeTemplateSymbolImage(
+        systemName: "timer",
+        accessibilityDescription: "Monitoring"
+    )
+    private let breakStatusImage = AppDelegate.makeTemplateSymbolImage(
+        systemName: "pause.circle.fill",
+        accessibilityDescription: "Break Time"
+    )
+    private let pausedStatusImage = AppDelegate.makeTemplateSymbolImage(
+        systemName: "pause.circle",
+        accessibilityDescription: "Paused"
+    )
 
     // MARK: - Managers
 
@@ -126,8 +138,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "timer", accessibilityDescription: "Teumnirm")
-            button.image?.isTemplate = true
+            button.image = monitoringStatusImage
         }
 
         let menu = NSMenu()
@@ -365,7 +376,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func startUsageTimer() {
         usageTimer?.invalidate()
         let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
-            self?.checkUsageTime()
+            autoreleasepool {
+                self?.checkUsageTime()
+            }
         }
         // Add to .common mode so the timer runs while the menu is open
         RunLoop.main.add(timer, forMode: .common)
@@ -375,7 +388,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func startTimerUpdateTimer() {
         timerUpdateTimer?.invalidate()
         let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
-            self?.updateTimerDisplay()
+            autoreleasepool {
+                self?.updateTimerDisplay()
+            }
         }
         // Add to .common mode so the timer runs while the menu is open
         RunLoop.main.add(timer, forMode: .common)
@@ -418,13 +433,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func updateTimerDisplay() {
         guard state == .monitoring else {
-            timerMenuItem.title = ""
+            if !timerMenuItem.title.isEmpty {
+                timerMenuItem.title = ""
+            }
             updateMenuBarTimerDisplay()
             return
         }
 
         if pendingBreakDueToMicrophone {
-            timerMenuItem.title = L.Menu.breakPendingForMicrophone
+            let newTitle = L.Menu.breakPendingForMicrophone
+            if timerMenuItem.title != newTitle {
+                timerMenuItem.title = newTitle
+            }
             if showTimerInMenuBar {
                 updateMenuBarTimerDisplay(minutes: 0, seconds: 0)
             } else {
@@ -434,7 +454,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         guard let remaining = remainingBreakTime() else {
-            timerMenuItem.title = ""
+            if !timerMenuItem.title.isEmpty {
+                timerMenuItem.title = ""
+            }
             updateMenuBarTimerDisplay()
             return
         }
@@ -442,7 +464,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let minutes = Int(remaining) / 60
         let seconds = Int(remaining) % 60
 
-        timerMenuItem.title = L.Menu.nextBreakIn(minutes: minutes, seconds: seconds)
+        let newTitle = L.Menu.nextBreakIn(minutes: minutes, seconds: seconds)
+        if timerMenuItem.title != newTitle {
+            timerMenuItem.title = newTitle
+        }
         updateMenuBarTimerDisplay(minutes: minutes, seconds: seconds)
     }
 
@@ -450,23 +475,32 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let statusItem = statusItem, let button = statusItem.button else { return }
 
         if showTimerInMenuBar, let minutes = minutes, let seconds = seconds {
-            button.title = String(format: "%d:%02d", minutes, seconds)
-            button.image = nil
+            let newTitle = String(format: "%d:%02d", minutes, seconds)
+            if button.title != newTitle {
+                button.title = newTitle
+            }
+            if button.image != nil {
+                button.image = nil
+            }
         } else {
-            button.title = ""
+            if !button.title.isEmpty {
+                button.title = ""
+            }
+
+            let statusImage: NSImage?
             // Restore icon based on current state
             switch state {
             case .monitoring:
-                button.image = NSImage(
-                    systemSymbolName: "timer", accessibilityDescription: "Monitoring")
+                statusImage = monitoringStatusImage
             case .breakTime:
-                button.image = NSImage(
-                    systemSymbolName: "pause.circle.fill", accessibilityDescription: "Break Time")
+                statusImage = breakStatusImage
             case .paused:
-                button.image = NSImage(
-                    systemSymbolName: "pause.circle", accessibilityDescription: "Paused")
+                statusImage = pausedStatusImage
             }
-            button.image?.isTemplate = true
+
+            if button.image !== statusImage {
+                button.image = statusImage
+            }
         }
     }
 
@@ -614,5 +648,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         NSApplication.shared.terminate(nil)
+    }
+
+    private static func makeTemplateSymbolImage(
+        systemName: String,
+        accessibilityDescription: String
+    ) -> NSImage? {
+        let image = NSImage(
+            systemSymbolName: systemName,
+            accessibilityDescription: accessibilityDescription
+        )
+        image?.isTemplate = true
+        return image
     }
 }
