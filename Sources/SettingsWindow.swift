@@ -681,21 +681,29 @@ class SettingsViewModel: ObservableObject {
 
     private func updateStatus() {
         guard let appDelegate = appDelegate else {
-            statusText = L.Settings.statusUnknown
-            remainingTimeText = nil
+            if statusText != L.Settings.statusUnknown {
+                statusText = L.Settings.statusUnknown
+            }
+            if remainingTimeText != nil {
+                remainingTimeText = nil
+            }
             return
         }
 
         // Update status text
+        let newStatusText: String
         switch appDelegate.state {
         case .monitoring:
-            statusText =
+            newStatusText =
                 appDelegate.isBreakDeferredForMicrophone
                 ? L.Settings.statusPendingForMicrophone : L.Settings.statusMonitoring
         case .breakTime:
-            statusText = L.Settings.statusBreakTime
+            newStatusText = L.Settings.statusBreakTime
         case .paused:
-            statusText = L.Settings.statusPaused
+            newStatusText = L.Settings.statusPaused
+        }
+        if statusText != newStatusText {
+            statusText = newStatusText
         }
 
         // Update remaining time (reflect pause during idle)
@@ -703,11 +711,13 @@ class SettingsViewModel: ObservableObject {
             !appDelegate.isBreakDeferredForMicrophone,
             let remaining = appDelegate.remainingBreakTime()
         {
-
             let minutes = Int(remaining) / 60
             let seconds = Int(remaining) % 60
-            remainingTimeText = String(format: "%d:%02d", minutes, seconds)
-        } else {
+            let newText = String(format: "%d:%02d", minutes, seconds)
+            if remainingTimeText != newText {
+                remainingTimeText = newText
+            }
+        } else if remainingTimeText != nil {
             remainingTimeText = nil
         }
     }

@@ -168,7 +168,7 @@ class ConfirmWindowController {
     }
 
     private func updateCountdown() {
-        guard let startTime = breakStartTime else { return }
+        guard let startTime = breakStartTime, let countdownLabel = countdownLabel else { return }
 
         let elapsed = Date().timeIntervalSince(startTime)
         let remaining = max(0, autoRestoreInterval - elapsed)
@@ -176,8 +176,10 @@ class ConfirmWindowController {
         let minutes = Int(remaining) / 60
         let seconds = Int(remaining) % 60
 
-        countdownLabel?.stringValue = L.ConfirmWindow.autoDismissIn(
-            minutes: minutes, seconds: seconds)
+        let newValue = L.ConfirmWindow.autoDismissIn(minutes: minutes, seconds: seconds)
+        if countdownLabel.stringValue != newValue {
+            countdownLabel.stringValue = newValue
+        }
     }
 
     private func autoRestore() {

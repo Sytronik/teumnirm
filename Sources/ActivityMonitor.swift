@@ -105,9 +105,9 @@ class ActivityMonitor {
 
         lastActivityTime = now
 
-        DispatchQueue.main.async { [weak self] in
-            self?.onActivity?()
-        }
+        // Callback is already on the main thread (HID manager is scheduled on main run loop),
+        // so call directly to avoid closure allocation overhead.
+        onActivity?()
     }
 }
 
