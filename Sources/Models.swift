@@ -11,6 +11,9 @@ enum AppConstants {
     static let idleThreshold: TimeInterval = 3 * 60  // 3 minutes - idle time to pause timer
     static let idleResetRatio: Double = 0.5  // Reset timer if idle for this ratio of breakInterval
     static let maxBlurRadius: Int32 = 64
+    static let defaultUsageHistoryDays = 7
+    static let usageHistoryDaysRange: ClosedRange<Int> = 1...30
+    static let usageHistoryMergeGap: TimeInterval = 3 * 60
 }
 
 // MARK: - Timer Settings
@@ -67,6 +70,9 @@ enum SettingsKeys {
     static let hasShownWelcome = "hasShownWelcome"
     static let showTimerInMenuBar = "showTimerInMenuBar"
     static let deferBreakWhileMicrophoneInUse = "deferBreakWhileMicrophoneInUse"
+    static let usageHistoryRecentDays = "usageHistoryRecentDays"
+    static let usageHistorySessions = "usageHistorySessions"
+    static let usageHistoryLastPrunedAt = "usageHistoryLastPrunedAt"
 }
 
 // MARK: - App State
@@ -137,6 +143,24 @@ struct HueAPIError: Codable {
     let type: Int
     let address: String
     let description: String
+}
+
+// MARK: - Usage History
+
+struct UsageSession: Codable, Identifiable, Equatable {
+    let id: UUID
+    let startAt: Date
+    let endAt: Date
+
+    init(id: UUID = UUID(), startAt: Date, endAt: Date) {
+        self.id = id
+        self.startAt = startAt
+        self.endAt = max(startAt, endAt)
+    }
+
+    var duration: TimeInterval {
+        endAt.timeIntervalSince(startAt)
+    }
 }
 
 // MARK: - Notification Names

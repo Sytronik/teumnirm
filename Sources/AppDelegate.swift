@@ -31,9 +31,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let blurOverlayManager = BlurOverlayManager()
     let hueController = HueController()
     private let microphoneUsageDetector = MicrophoneUsageDetector()
+    private let usageHistoryStore = UsageHistoryStore()
     private var activityMonitor: CGEventActivityMonitor?
     private var confirmWindowController = ConfirmWindowController()
     private var settingsWindowController = SettingsWindowController()
+    private var usageHistoryWindowController = UsageHistoryWindowController()
     private var welcomeWindowController = WelcomeWindowController()
 
     // MARK: - State
@@ -56,6 +58,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var accumulatedUsageTime: TimeInterval = 0
     private var usageResumeTime: Date?
     private var isUsagePaused = false
+    private var currentUsageSessionStart: Date?
+    private var historyPruneTimer: Timer?
     private var pendingBreakDueToMicrophone = false {
         didSet {
             guard pendingBreakDueToMicrophone != oldValue else { return }
@@ -111,9 +115,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         loadSettings()
+        usageHistoryStore.pruneIfNeeded()
         setupMenuBar()
         setupActivityMonitor()
         setupConfirmWindow()
+        startHistoryPruneTimer()
         blurOverlayManager.setupOverlayWindows()
         blurOverlayManager.registerDisplayChangeCallback()
 
@@ -127,9 +133,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        endUsageSession(at: Date())
         activityMonitor?.stopMonitoring()
         usageTimer?.invalidate()
         timerUpdateTimer?.invalidate()
+        historyPruneTimer?.invalidate()
     }
 
     // MARK: - Setup
@@ -167,6 +175,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             title: L.Menu.resetTimer, action: #selector(resetTimer), keyEquivalent: "r")
         resetItem.target = self
         menu.addItem(resetItem)
+
+        let historyItem = NSMenuItem(
+            title: L.Menu.usageHistory, action: #selector(openUsageHistory), keyEquivalent: "h")
+        historyItem.target = self
+        menu.addItem(historyItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -313,6 +326,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         isUsagePaused = false
         pendingBreakDueToMicrophone = false
         lastActivityTime = now
+        beginUsageSessionIfNeeded(at: now)
 
         // Start activity monitor
         if !activityMonitor!.startMonitoring() {
@@ -325,6 +339,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func stopMonitoring() {
+        endUsageSession(at: Date())
         activityMonitor?.stopMonitoring()
         usageTimer?.invalidate()
         usageTimer = nil
@@ -352,23 +367,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func endBreakTime() {
-        // Hide blur overlay
-        blurOverlayManager.hideOverlay()
-
-        // Hide confirm window
-        confirmWindowController.hideWindow()
-
-        // Restore Hue lights
-        if hueEnabled && hueController.isConfigured {
-            Task {
-                try? await hueController.restoreLights()
-            }
-        }
+        dismissBreakUI()
 
         // Resume monitoring
         state = .monitoring
 
         print("[AppDelegate] Break time ended")
+    }
+
+    private func dismissBreakUI(restoreHue: Bool = true) {
+        blurOverlayManager.hideOverlay()
+        confirmWindowController.hideWindow()
+
+        if restoreHue && hueEnabled && hueController.isConfigured {
+            Task {
+                try? await hueController.restoreLights()
+            }
+        }
     }
 
     // MARK: - Timer Management
@@ -401,6 +416,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard state == .monitoring else { return }
 
         let now = Date()
+        usageHistoryStore.pruneIfNeeded(now: now)
         pauseUsageTimerIfNeeded(at: now)
 
         guard let elapsed = currentUsageElapsedTime(at: now) else { return }
@@ -510,6 +526,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard state == .monitoring else { return }
 
         let now = Date()
+        beginUsageSessionIfNeeded(at: now)
 
         if isUsagePaused {
             isUsagePaused = false
@@ -529,6 +546,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // If idle for half of break interval, reset the timer completely
         if idleTime >= resetThreshold {
             if !isUsagePaused || accumulatedUsageTime > 0 {
+                endUsageSession(at: now)
                 accumulatedUsageTime = 0
                 isUsagePaused = true
                 usageResumeTime = now
@@ -544,10 +562,33 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             if let resumeTime = usageResumeTime {
                 accumulatedUsageTime += now.timeIntervalSince(resumeTime)
             }
+            endUsageSession(at: now)
             isUsagePaused = true
             usageResumeTime = now
             print("[AppDelegate] Idle detected, pausing usage timer")
         }
+    }
+
+    private func startHistoryPruneTimer() {
+        historyPruneTimer?.invalidate()
+        let timer = Timer(timeInterval: 60 * 60, repeats: true) { [weak self] _ in
+            self?.usageHistoryStore.pruneIfNeeded()
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        historyPruneTimer = timer
+    }
+
+    private func beginUsageSessionIfNeeded(at now: Date) {
+        guard currentUsageSessionStart == nil else { return }
+        currentUsageSessionStart = now
+        usageHistoryStore.startActiveSession(at: now)
+    }
+
+    private func endUsageSession(at now: Date) {
+        guard let sessionStart = currentUsageSessionStart else { return }
+        currentUsageSessionStart = nil
+        usageHistoryStore.clearActiveSession()
+        usageHistoryStore.addSession(startAt: sessionStart, endAt: now)
     }
 
     func currentUsageElapsedTime(at now: Date = Date()) -> TimeInterval? {
@@ -600,7 +641,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             state = .monitoring
         } else {
             if state == .breakTime {
-                endBreakTime()
+                dismissBreakUI()
             }
             state = .paused
         }
@@ -611,11 +652,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             endBreakTime()
         } else if state == .monitoring {
             let now = Date()
+            endUsageSession(at: now)
             accumulatedUsageTime = 0
             usageResumeTime = now
             isUsagePaused = false
             pendingBreakDueToMicrophone = false
             lastActivityTime = now
+            beginUsageSessionIfNeeded(at: now)
             print("[AppDelegate] Timer reset")
         }
     }
@@ -630,11 +673,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         settingsWindowController.showSettings(appDelegate: self)
     }
 
+    @objc private func openUsageHistory() {
+        usageHistoryWindowController.showWindow(store: usageHistoryStore)
+    }
+
+    func updateUsageHistoryRecentDays(_ days: Int) {
+        usageHistoryStore.recentDays = days
+        usageHistoryStore.pruneExpiredSessions(retentionDays: days)
+    }
+
     @objc private func quit() {
         // Clean up
         if state == .breakTime {
-            blurOverlayManager.hideOverlay()
-            confirmWindowController.hideWindow()
+            dismissBreakUI(restoreHue: false)
 
             if hueEnabled && hueController.isConfigured {
                 Task {
