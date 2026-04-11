@@ -16,6 +16,11 @@ let package = Package(
                 .linkedFramework("CoreGraphics"),
                 .linkedFramework("CoreAudio"),
             ]
+        ),
+        .testTarget(
+            name: "TeumnirmTests",
+            dependencies: ["Teumnirm"],
+            path: "Tests/TeumnirmTests"
         )
     ]
 )

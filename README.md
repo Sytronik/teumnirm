@@ -15,6 +15,7 @@ Teumnirm detects keyboard/mouse activity and blurs the screen after 55 minutes o
 - **Activity Monitoring**: Tracks computer usage time by detecting keyboard/mouse input
 - **Inactivity Detection**: Pauses the timer after 3 minutes of inactivity, and completely resets the timer if inactive for half of the break interval (default: 27.5 minutes)
 - **Meeting-safe Break Deferral**: Optionally delays break alerts while your microphone is in use and shows the alert immediately after mic use ends
+- **Usage History Window**: Shows computer usage history in a separate window, one day at a time, with previous/next day navigation
 - **Screen Blur**: Blurs the entire screen after a configured period of time
 - **Philips Hue Integration**: Changes lights to red for visual notification
 - **Auto Recovery**: Automatically restores to normal state after 5 minutes
@@ -54,6 +55,14 @@ xattr -cr ~/Downloads/Teumnirm.app
 3. After 55 minutes (default) of continuous use, the screen becomes blurred
 4. Click the "Break Complete" button after your break, or it will auto-dismiss after 5 minutes
 
+### Usage History
+
+1. Click the menu bar icon > **Usage History...**
+2. Review one day's usage at a time with the left/right buttons
+3. The header shows the selected day and total usage time for that day
+4. The current in-progress usage session is shown live in the history window
+5. Sessions separated by 3 minutes or less are merged automatically, but sessions across midnight remain separate
+
 ### During Meetings/Calls
 
 1. Open menu bar icon > **Settings...** > **General**
@@ -86,6 +95,7 @@ Local network access permission is required to communicate with the Hue bridge.
 
 - **Break Reminder Interval**: 20 to 120 minutes (default: 55 minutes)
 - **Auto Dismiss Time**: 3 to 15 minutes (default: 5 minutes)
+- **Usage History Range**: 1 to 30 days (default: 7 days). Older history outside this range is automatically deleted
 - **Delay Break Alert While Microphone Is In Use**: Useful for meetings; this is based on mic usage (not Zoom-only integration)
 - **Compatibility Mode**: Enable if the blur is not displaying properly
 
@@ -93,6 +103,7 @@ Local network access permission is required to communicate with the Hue bridge.
 
 - All data is processed locally
 - Keyboard/mouse input content is not recorded; only activity presence is detected
+- Usage history is stored locally on the device
 - Network communication is only used for local communication with the Philips Hue bridge
 
 ## License
@@ -146,8 +157,12 @@ teumnirm/
 │   ├── BlurOverlay.swift       # Screen blur
 │   ├── HueController.swift     # Philips Hue control
 │   ├── ConfirmWindow.swift     # Confirmation window
-│   └── SettingsWindow.swift    # Settings window (SwiftUI)
+│   ├── SettingsWindow.swift    # Settings window (SwiftUI)
+│   ├── UsageHistoryStore.swift # Usage history persistence and queries
+│   └── UsageHistoryWindow.swift # Usage history window (SwiftUI)
 ├── Package.swift
+├── Tests/
+│   └── TeumnirmTests/          # Usage history tests
 ├── build.sh
 └── README.md
 ```

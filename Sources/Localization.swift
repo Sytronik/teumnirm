@@ -3,7 +3,7 @@ import Foundation
 // MARK: - Localization
 
 /// Determines if the system language is Korean
-private let isKorean: Bool = {
+let isKorean: Bool = {
     guard let language = Locale.preferredLanguages.first else { return false }
     return language.hasPrefix("ko")
 }()
@@ -31,6 +31,10 @@ enum L {
 
         static var settings: String {
             isKorean ? "설정..." : "Settings..."
+        }
+
+        static var usageHistory: String {
+            isKorean ? "사용 기록..." : "Usage History..."
         }
 
         static var quit: String {
@@ -113,6 +117,10 @@ enum L {
             isKorean ? "자동 해제 시간" : "Auto-dismiss Time"
         }
 
+        static var usageHistoryRetentionDays: String {
+            isKorean ? "사용 기록 조회 기간" : "Usage History Range"
+        }
+
         static var deferBreakWhileMicrophoneInUse: String {
             isKorean ? "마이크 사용 중에는 휴식 알림 미루기" : "Delay break alert while microphone is in use"
         }
@@ -170,6 +178,34 @@ enum L {
 
         static var statusPaused: String {
             isKorean ? "일시정지" : "Paused"
+        }
+    }
+
+    // MARK: - Usage History Window
+
+    enum UsageHistory {
+        static var windowTitle: String {
+            isKorean ? "사용 기록" : "Usage History"
+        }
+
+        static var previousDay: String {
+            isKorean ? "이전 날" : "Previous Day"
+        }
+
+        static var nextDay: String {
+            isKorean ? "다음 날" : "Next Day"
+        }
+
+        static func days(_ value: Int) -> String {
+            isKorean ? "최근 \(value)일" : "Last \(value) days"
+        }
+
+        static var emptyState: String {
+            isKorean ? "표시할 사용 기록이 없습니다." : "No usage history to show."
+        }
+
+        static var noUsageOnDay: String {
+            isKorean ? "이 날에는 기록된 사용 시간이 없습니다." : "No recorded usage for this day."
         }
     }
 

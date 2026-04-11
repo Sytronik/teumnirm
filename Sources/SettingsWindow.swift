@@ -105,6 +105,18 @@ struct GeneralSettingsView: View {
                     .frame(width: 100)
                 }
 
+                HStack {
+                    Text(L.Settings.usageHistoryRetentionDays)
+                    Spacer()
+                    Picker("", selection: $viewModel.usageHistoryRecentDays) {
+                        ForEach(Array(AppConstants.usageHistoryDaysRange), id: \.self) { days in
+                            Text(L.UsageHistory.days(days)).tag(days)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .frame(width: 130)
+                }
+
                 Toggle(
                     L.Settings.deferBreakWhileMicrophoneInUse,
                     isOn: $viewModel.deferBreakWhileMicrophoneInUse
@@ -526,6 +538,21 @@ class SettingsViewModel: ObservableObject {
         }
     }
 
+    @Published var usageHistoryRecentDays: Int {
+        didSet {
+            let normalized = min(
+                max(usageHistoryRecentDays, AppConstants.usageHistoryDaysRange.lowerBound),
+                AppConstants.usageHistoryDaysRange.upperBound
+            )
+            if normalized != usageHistoryRecentDays {
+                usageHistoryRecentDays = normalized
+                return
+            }
+            appDelegate?.updateUsageHistoryRecentDays(normalized)
+            saveSettings()
+        }
+    }
+
     @Published var useCompatibilityMode: Bool {
         didSet {
             appDelegate?.blurOverlayManager.setCompatibilityMode(useCompatibilityMode)
@@ -625,6 +652,11 @@ class SettingsViewModel: ObservableObject {
         self.breakIntervalMinutes = Int(appDelegate.breakInterval / 60)
         self.autoRestoreMinutes = Int(appDelegate.autoRestoreInterval / 60)
         self.deferBreakWhileMicrophoneInUse = appDelegate.deferBreakWhileMicrophoneInUse
+        let storedHistoryDays = defaults.integer(forKey: SettingsKeys.usageHistoryRecentDays)
+        self.usageHistoryRecentDays =
+            AppConstants.usageHistoryDaysRange.contains(storedHistoryDays)
+            ? storedHistoryDays
+            : AppConstants.defaultUsageHistoryDays
         self.useCompatibilityMode = defaults.bool(forKey: SettingsKeys.useCompatibilityMode)
         self.showTimerInMenuBar = defaults.bool(forKey: SettingsKeys.showTimerInMenuBar)
         self.hueEnabled = defaults.bool(forKey: SettingsKeys.hueEnabled)
@@ -783,6 +815,7 @@ class SettingsViewModel: ObservableObject {
             deferBreakWhileMicrophoneInUse,
             forKey: SettingsKeys.deferBreakWhileMicrophoneInUse
         )
+        defaults.set(usageHistoryRecentDays, forKey: SettingsKeys.usageHistoryRecentDays)
         defaults.set(useCompatibilityMode, forKey: SettingsKeys.useCompatibilityMode)
         defaults.set(showTimerInMenuBar, forKey: SettingsKeys.showTimerInMenuBar)
         defaults.set(hueEnabled, forKey: SettingsKeys.hueEnabled)
